@@ -1,0 +1,52 @@
+{
+  "name": "colregs-mcp",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Preview MCP server over colregs-engine: cited, plural, modality-preserving COLREGS light displays",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mark-brannan/colregs-mcp.git"
+  },
+  "homepage": "https://github.com/mark-brannan/colregs-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/mark-brannan/colregs-mcp/issues"
+  },
+  "bin": {
+    "colregs-mcp": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
+    "start": "node dist/cli.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "colregs": "^0.2.0",
+    "colregs-engine": "github:mark-brannan/colregs-engine",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "tsx": "4.23.13",
+    "typescript": "^5.7.2",
+    "vitest": "^3.2.7"
+  }
+}

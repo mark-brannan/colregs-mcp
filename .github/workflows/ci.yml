@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      # colregs-engine is a git dependency on its main branch; `npm ci` takes
+      # the commit the lockfile recorded, so a run here is reproducible and
+      # `npm update colregs-engine` is the deliberate way to move it.
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
