@@ -70,3 +70,21 @@ jobs:
 
       # No NODE_AUTH_TOKEN -- authentication is the OIDC identity above.
       - run: npm publish
+
+      # The official MCP registry, immediately after npm and from the same
+      # tag, so a version can never exist in one and not the other. The
+      # registry validates that the npm tarball it is pointed at carries an
+      # `mcpName` matching server.json's `name`, which is why that key is in
+      # package.json; publishing to the registry before npm would fail that
+      # check. `login github-oidc` uses the same id-token permission npm's
+      # trusted publishing does -- no stored secret, and the GitHub identity
+      # is what restricts the name to the `io.github.mark-brannan/` namespace.
+      #
+      # server.json's two version fields are kept in step with package.json by
+      # release-please's extra-files, so no step here rewrites them.
+      - name: Publish to the MCP registry
+        run: |
+          curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" \
+            | tar xz mcp-publisher
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish
