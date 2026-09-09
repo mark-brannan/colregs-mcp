@@ -24,19 +24,14 @@ export const NOT_FOR_NAVIGATION =
   'colregs data package; nothing is paraphrased. This tool surface is a 0.0.x ' +
   'preview and will change without notice.';
 
-// The server-level instructions string: the first thing a client shows about
-// the server as a whole, and for many clients the only thing it shows without
-// the README. It opens with the same NOT_FOR_NAVIGATION wording every tool
-// description carries, so no surface states the limits differently.
+// Server-level instructions. Clients put this in the model's context for the
+// whole session, so it says only what no tool description already says.
 export const INSTRUCTIONS =
   NOT_FOR_NAVIGATION +
   '\n\n' +
-  'Four tools: evaluate_display (every lawful light display for a fact record), ' +
-  'applied_entries (the entries that applied, without assembling displays), ' +
-  'rule_text (the verbatim text a paragraph cite resolves to) and light ' +
-  '(one light definition). The engine decides; this server only decides how the ' +
-  'answer is written down. When lawful_displays.count is greater than 1, every ' +
-  'option is equally lawful and the correct report is all of them.';
+  'When lawful_displays.count is greater than 1, every option is equally lawful and ' +
+  'the answer is all of them. Quote rule text from cited_paragraphs or rule_text, ' +
+  'never from memory.';
 
 const PLURAL_ANSWER =
   'A fact record describes a situation, not a fitted vessel: colregs data/facts.json ' +
@@ -96,12 +91,8 @@ function factRecordSchema() {
   return z.object(shape).strict();
 }
 
-// Carried in every response body, success or error, as the first field. A
-// tool description and the server instructions are read once, at connect
-// time, and a model that answers from a response three turns later has only
-// the response in front of it. The short form is deliberate: the full
-// coverage statement is NOT_FOR_NAVIGATION above, and this rides on every
-// call.
+// First field of every response, success or error. Descriptions are read once
+// at connect time; the response is what a model has in front of it when it answers.
 export const RESPONSE_WARNING =
   'Not for navigation. COLREGS Part C lights only, international text only, night only, ' +
   'evaluated against pre-release colregs data (0.x). Do not use this to decide what to ' +
