@@ -28,6 +28,14 @@ claude mcp add colregs -- npx -y colregs-mcp
 Any other MCP client: command `npx`, arguments `-y colregs-mcp`, no
 environment.
 
+From a clone instead, to run unreleased changes:
+
+```bash
+git clone https://github.com/mark-brannan/colregs-mcp && cd colregs-mcp && npm install && npm run build
+```
+
+then command `node`, argument `/absolute/path/to/colregs-mcp/dist/cli.js`.
+
 ## Tools
 
 | tool | input | returns |
