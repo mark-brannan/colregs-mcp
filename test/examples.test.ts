@@ -136,6 +136,7 @@ describe('applied_entries', () => {
     const { isError, body } = await call(client, 'applied_entries', { facts: SLOOP });
     expect(isError).toBe(false);
     expect(body).toEqual({
+      warning: expect.stringContaining('Not for navigation.'),
       colregs: { version: expect.any(String), source: 'resolved' },
       facts: SLOOP,
       applied: [
@@ -216,6 +217,17 @@ describe('the not-for-navigation warning reaches every surface', () => {
     expect(instructions).toContain('Not for navigation.');
     expect(instructions).toContain('Part C lights only');
     expect(instructions).toContain('pre-release colregs data');
+  });
+  it('every response body carries it, success and error alike', async () => {
+    const ok = await call(client, 'applied_entries', { facts: SLOOP });
+    expect(ok.isError).toBe(false);
+    expect(ok.body.warning).toContain('Not for navigation.');
+    expect(Object.keys(ok.body)[0]).toBe('warning');
+    expect((ok.structured as { warning: string }).warning).toContain('Not for navigation.');
+
+    const bad = await call(client, 'rule_text', { cite: 'not-a-cite' });
+    expect(bad.isError).toBe(true);
+    expect(bad.body.warning).toContain('Not for navigation.');
   });
   it('the published package description carries it, for npm and the registries', () => {
     const pkg = require('../package.json') as { description: string };

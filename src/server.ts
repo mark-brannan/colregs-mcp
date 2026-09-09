@@ -96,14 +96,30 @@ function factRecordSchema() {
   return z.object(shape).strict();
 }
 
-const json = (value: unknown): CallToolResult => ({
-  content: [{ type: 'text', text: JSON.stringify(value, null, 2) }],
-  structuredContent: value as Record<string, unknown>,
-});
+// Carried in every response body, success or error, as the first field. A
+// tool description and the server instructions are read once, at connect
+// time, and a model that answers from a response three turns later has only
+// the response in front of it. The short form is deliberate: the full
+// coverage statement is NOT_FOR_NAVIGATION above, and this rides on every
+// call.
+export const RESPONSE_WARNING =
+  'Not for navigation. COLREGS Part C lights only, international text only, night only, ' +
+  'evaluated against pre-release colregs data (0.x). Do not use this to decide what to ' +
+  'show or what you are looking at on the water.';
+
+const json = (value: unknown): CallToolResult => {
+  const body = { warning: RESPONSE_WARNING, ...(value as Record<string, unknown>) };
+  return {
+    content: [{ type: 'text', text: JSON.stringify(body, null, 2) }],
+    structuredContent: body,
+  };
+};
 
 const failure = (message: string, detail?: Record<string, unknown>): CallToolResult => ({
   isError: true,
-  content: [{ type: 'text', text: JSON.stringify({ error: message, ...detail }, null, 2) }],
+  content: [
+    { type: 'text', text: JSON.stringify({ warning: RESPONSE_WARNING, error: message, ...detail }, null, 2) },
+  ],
 });
 
 function withEngine<T>(fn: () => T): CallToolResult {
