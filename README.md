@@ -1,7 +1,10 @@
 # colregs-mcp
 
-**Preview, 0.0.x. Not for navigation. The tool surface will change without
-notice.**
+> [!WARNING]
+> **Not for navigation.** This is a preview (0.0.x) built on pre-release
+> rule data. It covers COLREGS Part C lights only, international text only,
+> at night only. Do not use its output to decide what to show or what you
+> are looking at on the water. The tool surface will change without notice.
 
 An [MCP](https://modelcontextprotocol.io) server that answers "what lights
 may this vessel show" from
