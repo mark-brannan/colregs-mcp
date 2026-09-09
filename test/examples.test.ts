@@ -233,6 +233,11 @@ describe('the not-for-navigation warning reaches every surface', () => {
     const pkg = require('../package.json') as { description: string };
     expect(pkg.description).toContain('Not for navigation.');
   });
+  it('the .mcpb bundle manifest carries it, verbatim from package.json', () => {
+    const pkg = require('../package.json') as { description: string };
+    const manifest = require('../manifest.json') as { description: string };
+    expect(manifest.description).toBe(pkg.description);
+  });
 });
 
 describe('tool descriptions', () => {
