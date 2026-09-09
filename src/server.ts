@@ -24,6 +24,15 @@ export const NOT_FOR_NAVIGATION =
   'colregs data package; nothing is paraphrased. This tool surface is a 0.0.x ' +
   'preview and will change without notice.';
 
+// Server-level instructions. Clients put this in the model's context for the
+// whole session, so it says only what no tool description already says.
+export const INSTRUCTIONS =
+  NOT_FOR_NAVIGATION +
+  '\n\n' +
+  'When lawful_displays.count is greater than 1, every option is equally lawful and ' +
+  'the answer is all of them. Quote rule text from cited_paragraphs or rule_text, ' +
+  'never from memory.';
+
 const PLURAL_ANSWER =
   'A fact record describes a situation, not a fitted vessel: colregs data/facts.json ' +
   'has no equipment fact, so nothing in the input can settle a choice the Rules leave ' +
@@ -82,14 +91,26 @@ function factRecordSchema() {
   return z.object(shape).strict();
 }
 
-const json = (value: unknown): CallToolResult => ({
-  content: [{ type: 'text', text: JSON.stringify(value, null, 2) }],
-  structuredContent: value as Record<string, unknown>,
-});
+// First field of every response, success or error. Descriptions are read once
+// at connect time; the response is what a model has in front of it when it answers.
+export const RESPONSE_WARNING =
+  'Not for navigation. COLREGS Part C lights only, international text only, night only, ' +
+  'evaluated against pre-release colregs data (0.x). Do not use this to decide what to ' +
+  'show or what you are looking at on the water.';
+
+const json = (value: unknown): CallToolResult => {
+  const body = { warning: RESPONSE_WARNING, ...(value as Record<string, unknown>) };
+  return {
+    content: [{ type: 'text', text: JSON.stringify(body, null, 2) }],
+    structuredContent: body,
+  };
+};
 
 const failure = (message: string, detail?: Record<string, unknown>): CallToolResult => ({
   isError: true,
-  content: [{ type: 'text', text: JSON.stringify({ error: message, ...detail }, null, 2) }],
+  content: [
+    { type: 'text', text: JSON.stringify({ warning: RESPONSE_WARNING, error: message, ...detail }, null, 2) },
+  ],
 });
 
 function withEngine<T>(fn: () => T): CallToolResult {
@@ -102,7 +123,7 @@ function withEngine<T>(fn: () => T): CallToolResult {
 
 export function createServer(): McpServer {
   CHECK_VERSIONS();
-  const server = new McpServer({ name: 'colregs-mcp', version: VERSION });
+  const server = new McpServer({ name: 'colregs-mcp', version: VERSION }, { instructions: INSTRUCTIONS });
   const FactsSchema = factRecordSchema();
 
   server.registerTool(

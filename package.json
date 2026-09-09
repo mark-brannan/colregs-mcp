@@ -2,7 +2,7 @@
   "name": "colregs-mcp",
   "version": "0.0.1",
   "type": "module",
-  "description": "Preview MCP server over colregs-engine: cited, plural, modality-preserving COLREGS light displays",
+  "description": "Not for navigation. MCP server that answers questions under the COLREGS in a form a language model cannot quietly simplify: every lawful answer, every entry with its cite and the verbatim rule text. A preview on pre-release rule data; coverage is partial and the tool surface will change.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
