@@ -210,6 +210,19 @@ describe('inputs', () => {
   });
 });
 
+describe('the not-for-navigation warning reaches every surface', () => {
+  it("the server's instructions carry it, for clients that show no tool description", () => {
+    const instructions = client.getInstructions() ?? '';
+    expect(instructions).toContain('Not for navigation.');
+    expect(instructions).toContain('Part C lights only');
+    expect(instructions).toContain('pre-release colregs data');
+  });
+  it('the published package description carries it, for npm and the registries', () => {
+    const pkg = require('../package.json') as { description: string };
+    expect(pkg.description).toContain('Not for navigation.');
+  });
+});
+
 describe('tool descriptions', () => {
   it('every tool carries the not-for-navigation line and coverage limits', async () => {
     const { tools } = await client.listTools();

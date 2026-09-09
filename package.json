@@ -2,7 +2,7 @@
   "name": "colregs-mcp",
   "version": "0.0.1",
   "type": "module",
-  "description": "Preview MCP server over colregs-engine: cited, plural, modality-preserving COLREGS light displays",
+  "description": "Not for navigation. Preview MCP server over colregs-engine: cited, plural, modality-preserving COLREGS Part C light displays; international text, night only, pre-release data.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

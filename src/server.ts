@@ -24,6 +24,20 @@ export const NOT_FOR_NAVIGATION =
   'colregs data package; nothing is paraphrased. This tool surface is a 0.0.x ' +
   'preview and will change without notice.';
 
+// The server-level instructions string: the first thing a client shows about
+// the server as a whole, and for many clients the only thing it shows without
+// the README. It opens with the same NOT_FOR_NAVIGATION wording every tool
+// description carries, so no surface states the limits differently.
+export const INSTRUCTIONS =
+  NOT_FOR_NAVIGATION +
+  '\n\n' +
+  'Four tools: evaluate_display (every lawful light display for a fact record), ' +
+  'applied_entries (the entries that applied, without assembling displays), ' +
+  'rule_text (the verbatim text a paragraph cite resolves to) and light ' +
+  '(one light definition). The engine decides; this server only decides how the ' +
+  'answer is written down. When lawful_displays.count is greater than 1, every ' +
+  'option is equally lawful and the correct report is all of them.';
+
 const PLURAL_ANSWER =
   'A fact record describes a situation, not a fitted vessel: colregs data/facts.json ' +
   'has no equipment fact, so nothing in the input can settle a choice the Rules leave ' +
@@ -102,7 +116,7 @@ function withEngine<T>(fn: () => T): CallToolResult {
 
 export function createServer(): McpServer {
   CHECK_VERSIONS();
-  const server = new McpServer({ name: 'colregs-mcp', version: VERSION });
+  const server = new McpServer({ name: 'colregs-mcp', version: VERSION }, { instructions: INSTRUCTIONS });
   const FactsSchema = factRecordSchema();
 
   server.registerTool(
