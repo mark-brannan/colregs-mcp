@@ -142,12 +142,11 @@ Trimmed response:
 }
 ```
 
-No Rule 26 entry fires for `position:aground`, so she shows the same
-anchor lights of Rule 30 as any other vessel her length, plus 30(d)'s
-red lights if practicable. Whether a fishing vessel aground should also
-show a fishing-vessel identity is an open question upstream
-([colregs-engine#32](https://github.com/mark-brannan/colregs-engine/issues/32)),
-not a gap in this package.
+No Rule 26 entry fires for `position:aground`: per
+[ADR 0007](https://github.com/mark-brannan/colregs/blob/main/docs/adr/0007-rule26-overrides-and-aground.md),
+Rule 26 has no jurisdiction over a vessel aground, so Rule 30(d) alone
+governs and she shows the same anchor lights as any other vessel her
+length, plus 30(d)'s red lights if practicable.
 
 ## Response shape
 
