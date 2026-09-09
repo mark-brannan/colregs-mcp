@@ -59,26 +59,28 @@ describe('evaluate_display: the 12 m sloop shows one of three displays', () => {
 });
 
 describe('evaluate_display: a fishing vessel aground', () => {
-  it('reports exclusions with their source and keeps shall-if-practicable', async () => {
+  it('falls back to ordinary anchor lights, no Rule 26 entry firing', async () => {
     const { isError, body } = await call(client, 'evaluate_display', { facts: FISHING_AGROUND });
     expect(isError).toBe(false);
 
-    expect(body.applied.map((a: { id: string }) => a.id)).toEqual(['26c-id', '30d-anchor', '30d-red']);
-    expect(body.excluded).toEqual([
-      { id: '30a', cite: '30(a)', by: { id: '26c-id', cite: '26(c)(i)' } },
-      { id: '30b', cite: '30(b)', by: { id: '26c-id', cite: '26(c)(i)' } },
-    ]);
+    // colregs-engine#32 (open, unruled): whether a fishing vessel aground
+    // shows a fishing-vessel identity alongside her anchor lights. As it
+    // stands, no Rule 26 entry fires for `position:aground`, so she shows
+    // the plain anchor lights of Rule 30 like any other vessel her length.
+    expect(body.applied.map((a: { id: string }) => a.id)).toEqual(['30d-anchor', '30d-red']);
+    expect(body.excluded).toEqual([]);
 
     const ld = body.lawful_displays;
-    expect(ld.count).toBe(1);
-    expect(ld.relation).toBe('exactly_one');
-    const mods = ld.options[0].lights.map((l: { modality: string }) => l.modality);
+    expect(ld.count).toBe(2);
+    expect(ld.relation).toBe('any_one_of');
+    expect(ld.options.map((o: { chosen: { id: string }[] }) => o.chosen.map((c) => c.id))).toEqual([['30a'], ['30b']]);
+    const mods = ld.options.flatMap((o: { lights: { modality: string }[] }) => o.lights.map((l) => l.modality));
     expect(mods).toContain('shall');
+    expect(mods).toContain('may');
     expect(mods).toContain('shall-if-practicable');
     expect(body.modality_key['shall-if-practicable']).toEqual(expect.any(String));
 
-    // The excluded paragraphs are still cited verbatim so the veto can be read.
-    for (const k of ['26(c)(i)', '30(a)', '30(b)', '30(d)']) {
+    for (const k of ['30(a)', '30(b)', '30(d)']) {
       expect(body.cited_paragraphs[k]).toBe(rulesJson.paragraphs[k].text);
     }
   });
