@@ -107,40 +107,47 @@ colregs' `data/facts.json` (checked: nothing in that file names a lantern,
 a fitting or a piece of gear), so nothing in the input can settle 25(b)
 against 25(c). The Rules leave that to the skipper, and so does this.
 
-### A fishing vessel aground: a veto, with its source
+### A fishing vessel aground: two lawful displays, no exclusion
 
 ```json
 { "facts": { "fact:propulsion": "propulsion:power", "fact:activity": "activity:fishing",
              "fact:position": "position:aground", "fact:length_m": 30 } }
 ```
 
+Trimmed response:
+
 ```json
 {
   "applied": [
-    { "id": "26c-id", "cite": "26(c)(i)", "modality": "shall" },
     { "id": "30d-anchor", "cite": "30(d)", "modality": "shall" },
     { "id": "30d-red", "cite": "30(d)", "modality": "shall-if-practicable" }
   ],
-  "excluded": [
-    { "id": "30a", "cite": "30(a)", "by": { "id": "26c-id", "cite": "26(c)(i)" } },
-    { "id": "30b", "cite": "30(b)", "by": { "id": "26c-id", "cite": "26(c)(i)" } }
-  ],
+  "excluded": [],
   "lawful_displays": {
-    "count": 1, "relation": "exactly_one",
-    "options": [ { "option": 1, "of": 1, "chosen": [], "lights": [
-      { "light": "light:all_round", "color": "red",   "count": 1, "position": "upper", "modality": "shall", "prescribed_by": { "id": "26c-id", "cite": "26(c)(i)" } },
-      { "light": "light:all_round", "color": "white", "count": 1, "position": "lower", "modality": "shall", "prescribed_by": { "id": "26c-id", "cite": "26(c)(i)" } },
-      { "light": "light:all_round", "color": "red",   "count": 2, "arrangement": "vertical", "modality": "shall-if-practicable", "prescribed_by": { "id": "30d-red", "cite": "30(d)" } } ] } ]
+    "count": 2, "relation": "any_one_of",
+    "options": [
+      { "option": 1, "of": 2, "chosen": [ { "id": "30a", "cite": "30(a)", "modality": "shall" } ],
+        "lights": [
+          { "light": "light:all_round", "color": "red",   "count": 2, "arrangement": "vertical", "modality": "shall-if-practicable", "prescribed_by": { "id": "30d-red", "cite": "30(d)" } },
+          { "light": "light:all_round", "color": "white", "count": 1, "position": "in the fore part", "modality": "shall", "prescribed_by": { "id": "30a", "cite": "30(a)" }, "via": { "id": "30d-anchor", "cite": "30(d)" } },
+          { "light": "light:all_round", "color": "white", "count": 1, "position": "at or near the stern, at a lower level than the fore one", "modality": "shall", "prescribed_by": { "id": "30a", "cite": "30(a)" }, "via": { "id": "30d-anchor", "cite": "30(d)" } } ] },
+      { "option": 2, "of": 2, "chosen": [ { "id": "30b", "cite": "30(b)", "modality": "may" } ],
+        "lights": [
+          { "light": "light:all_round", "color": "red",   "count": 2, "arrangement": "vertical", "modality": "shall-if-practicable", "prescribed_by": { "id": "30d-red", "cite": "30(d)" } },
+          { "light": "light:all_round", "color": "white", "count": 1, "position": "where it can best be seen", "modality": "may", "prescribed_by": { "id": "30b", "cite": "30(b)" }, "via": { "id": "30d-anchor", "cite": "30(d)" } } ] }
+    ]
   },
-  "modality_key": { "shall": "mandatory", "shall-if-practicable": "mandatory where practicable, with a stated fallback" },
-  "cited_paragraphs": { "26(c)(i)": "…", "30(d)": "…", "30(a)": "…", "30(b)": "…" }
+  "modality_key": { "shall": "mandatory", "may": "permitted alternative", "shall-if-practicable": "mandatory where practicable, with a stated fallback" },
+  "cited_paragraphs": { "30(a)": "…", "30(b)": "…", "30(d)": "…" }
 }
 ```
 
-Rule 26(a) says a fishing vessel shows only the lights of that Rule; the
-anchor lights of 30(a)/(b) are struck and the response says which entry
-struck them. The excluded paragraphs are still cited verbatim so the veto
-can be checked, not just believed.
+No Rule 26 entry fires for `position:aground`, so she shows the same
+anchor lights of Rule 30 as any other vessel her length, plus 30(d)'s
+red lights if practicable. Whether a fishing vessel aground should also
+show a fishing-vessel identity is an open question upstream
+([colregs-engine#32](https://github.com/mark-brannan/colregs-engine/issues/32)),
+not a gap in this package.
 
 ## Response shape
 
@@ -177,14 +184,9 @@ belong somewhere else. This is that somewhere.
 
 ## Dependencies and stability
 
-- `colregs-engine` is a git dependency on that repository's `main` branch,
-  because the engine is not yet published to npm. `package-lock.json`
-  records the commit an install resolved; `npm update colregs-engine` moves
-  it to the current tip. Breakage from an engine change is accepted at this
-  stage.
-- `colregs` is the published data package. The engine and this package
-  must resolve the same release; a split install fails at startup with a
-  message saying so.
+- `colregs-engine` and `colregs` are both published npm packages, pinned
+  with caret ranges. The engine and the data package must resolve the same
+  release; a split install fails at startup with a message saying so.
 - Version 0.0.x. Tool names, argument names and response fields may all
   change. The three response properties above are the commitment; nothing
   else is.
