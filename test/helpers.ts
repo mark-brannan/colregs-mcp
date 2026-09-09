@@ -32,3 +32,14 @@ export const FISHING_AGROUND = {
   'fact:position': 'position:aground',
   'fact:length_m': 30,
 };
+
+// colregs-engine#36: a trawler at anchor has her Rule 30 anchor lights
+// (30a/30b) displaced by Rule 26's fishing-vessel identification lights via
+// rel:overrides, not rel:excludes -- this is what evaluate_display must
+// surface in `overridden`, separately from `excluded`.
+export const TRAWLER_ANCHORED = {
+  'fact:propulsion': 'propulsion:power',
+  'fact:activity': 'activity:trawling',
+  'fact:position': 'position:anchored',
+  'fact:length_m': 30,
+};

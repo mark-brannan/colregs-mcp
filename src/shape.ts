@@ -59,6 +59,13 @@ export interface EvaluateDisplayResponse {
   applied: CitedModal[];
   exempted: CitedBy[];
   excluded: CitedBy[];
+  /** Applied entries displaced by a superior applied obligation's
+   * rel:overrides, with the overriding id (colregs-engine#36). Kept apart
+   * from `excluded` rather than merged into it: `excluded` is barred by a
+   * rel:excludes constraint, `overridden` is displaced by a rel:overrides
+   * obligation — different mechanisms, so a reader can tell which one
+   * removed the entry without inspecting `by`. */
+  overridden: CitedBy[];
   lawful_displays: {
     count: number;
     relation: DisplayRelation;
@@ -110,7 +117,7 @@ export function shapeEvaluation(facts: FactRecord, ev: DisplayEvaluation): Evalu
 
   const cites = new Set<string>();
   for (const id of ev.applied) cites.add(citeOf(id));
-  for (const x of [...ev.exempted, ...ev.excluded]) {
+  for (const x of [...ev.exempted, ...ev.excluded, ...ev.overridden]) {
     cites.add(citeOf(x.id));
     cites.add(citeOf(x.by));
   }
@@ -131,6 +138,7 @@ export function shapeEvaluation(facts: FactRecord, ev: DisplayEvaluation): Evalu
     applied: ev.applied.map(modal),
     exempted: ev.exempted.map((x) => ({ ...cited(x.id), by: cited(x.by) })),
     excluded: ev.excluded.map((x) => ({ ...cited(x.id), by: cited(x.by) })),
+    overridden: ev.overridden.map((x) => ({ ...cited(x.id), by: cited(x.by) })),
     lawful_displays: { count, relation, options },
     optional_additions: { relation: 'any_subset_of', items: additions },
     modality_key,
