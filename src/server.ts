@@ -112,8 +112,10 @@ export function createServer(): McpServer {
       description:
         'Every complete, lawful set of navigation lights one vessel may show, from a ' +
         'fact record (propulsion, activity, position, length, and the other facts ' +
-        'in colregs data/facts.json) under the COLREGS. Returns the applied entries, ' +
-        'the entries exempted or excluded and by which entry, and lawful_displays: ' +
+        'in colregs data/facts.json) under the COLREGS. Returns the applied entries; ' +
+        'exempted (relieved by a rel:exempts entry), excluded (barred by a required ' +
+        "entry's rel:excludes) and overridden (displaced by a superior obligation's " +
+        'rel:overrides) entries, each with the entry that did it; and lawful_displays: ' +
         '{count, relation, options}. relation is "none", "exactly_one" or "any_one_of". ' +
         PLURAL_ANSWER +
         ' optional_additions are lawful extras (relation any_subset_of) that do not ' +

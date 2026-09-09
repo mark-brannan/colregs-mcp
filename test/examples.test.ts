@@ -5,7 +5,7 @@
 import { createRequire } from 'node:module';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { FISHING_AGROUND, SLOOP, call, connect } from './helpers.js';
+import { FISHING_AGROUND, SLOOP, TRAWLER_ANCHORED, call, connect } from './helpers.js';
 
 const require = createRequire(import.meta.url);
 const rulesJson = require('colregs/data/rules.json');
@@ -30,6 +30,7 @@ describe('evaluate_display: the 12 m sloop shows one of three displays', () => {
     ]);
     expect(body.excluded).toEqual([]);
     expect(body.exempted).toEqual([]);
+    expect(body.overridden).toEqual([]);
 
     const ld = body.lawful_displays;
     expect(Object.keys(ld)).toEqual(['count', 'relation', 'options']);
@@ -69,6 +70,7 @@ describe('evaluate_display: a fishing vessel aground', () => {
     // the plain anchor lights of Rule 30 like any other vessel her length.
     expect(body.applied.map((a: { id: string }) => a.id)).toEqual(['30d-anchor', '30d-red']);
     expect(body.excluded).toEqual([]);
+    expect(body.overridden).toEqual([]);
 
     const ld = body.lawful_displays;
     expect(ld.count).toBe(2);
@@ -82,6 +84,49 @@ describe('evaluate_display: a fishing vessel aground', () => {
 
     for (const k of ['30(a)', '30(b)', '30(d)']) {
       expect(body.cited_paragraphs[k]).toBe(rulesJson.paragraphs[k].text);
+    }
+  });
+});
+
+describe('evaluate_display: a trawler at anchor (colregs-engine#36)', () => {
+  it('reports her displaced 30a/30b anchor lights in overridden, not excluded', async () => {
+    const { isError, body } = await call(client, 'evaluate_display', { facts: TRAWLER_ANCHORED });
+    expect(isError).toBe(false);
+
+    // Rule 26's fishing-vessel identification is an obligation that
+    // outranks Rule 30's anchor lights for the same vessel: 30a/30b leave
+    // composition via rel:overrides, not rel:excludes, and must still be
+    // named -- silently dropping them (the bug this test pins) would leave
+    // an MCP client believing no anchor-light rule ever applied at all.
+    expect(body.excluded).toEqual([]);
+    expect(body.overridden.length).toBeGreaterThan(0);
+    expect(body.overridden.map((x: { id: string }) => x.id).sort()).toEqual(['30a', '30b']);
+    for (const x of body.overridden) {
+      expect(x).toEqual({
+        id: expect.any(String),
+        cite: expect.stringMatching(/^30\(/),
+        by: { id: expect.any(String), cite: expect.stringMatching(/^26\(/) },
+      });
+    }
+    // Both the displaced entries and their overrider are "applied" (their
+    // predicates matched) -- overridden only says they left composition,
+    // same contract as excluded/exempted.
+    const appliedIds = body.applied.map((a: { id: string }) => a.id);
+    const overriddenBy = new Set(body.overridden.map((x: { by: { id: string } }) => x.by.id));
+    for (const id of overriddenBy) expect(appliedIds).toContain(id);
+    for (const x of body.overridden) expect(appliedIds).toContain(x.id);
+
+    // Neither displaced entry appears in any lawful display.
+    for (const d of body.lawful_displays.options) {
+      expect(d.entries.map((e: { id: string }) => e.id)).not.toContain('30a');
+      expect(d.entries.map((e: { id: string }) => e.id)).not.toContain('30b');
+    }
+
+    // Overridden ids' and overriders' cites are resolvable, same contract
+    // as exempted/excluded.
+    for (const x of body.overridden) {
+      expect(body.cited_paragraphs[x.cite]).toEqual(expect.any(String));
+      expect(body.cited_paragraphs[x.by.cite]).toEqual(expect.any(String));
     }
   });
 });
