@@ -187,6 +187,19 @@ belong somewhere else. This is that somewhere.
   change. The three response properties above are the commitment; nothing
   else is.
 
+## Privacy Policy
+
+The server collects nothing. It runs as a local stdio process on the
+machine that started it, answers from the `colregs` data package installed
+beside it, and makes no network request of its own: there is no telemetry,
+no analytics, no logging of the fact records or cites it is asked about, and
+no account. Nothing a client sends it leaves that process, and nothing is
+written to disk.
+
+The one thing that leaves your machine is the install itself — `npx` or
+`npm install` fetching the package from the public npm registry, which is
+npm's transaction, not this server's.
+
 ## Licence
 
 Apache-2.0. Nothing here is advice to mariners; the fitness-for-navigation

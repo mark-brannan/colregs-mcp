@@ -1,6 +1,7 @@
 {
   "name": "colregs-mcp",
   "version": "0.0.1",
+  "mcpName": "io.github.mark-brannan/colregs-mcp",
   "type": "module",
   "description": "Preview MCP server over colregs-engine: cited, plural, modality-preserving COLREGS light displays",
   "license": "Apache-2.0",
