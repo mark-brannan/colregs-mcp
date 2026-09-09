@@ -6,12 +6,12 @@
 > at night only. Do not use its output to decide what to show or what you
 > are looking at on the water. The tool surface will change without notice.
 
-An [MCP](https://modelcontextprotocol.io) server that answers "what lights
-may this vessel show" from
-[colregs-engine](https://github.com/mark-brannan/colregs-engine), and hands
-back the answer in a form a language model cannot quietly simplify: every
-lawful display, every light with its own modality, every entry with its
-paragraph cite, and the verbatim rule text those cites resolve to.
+An [MCP](https://modelcontextprotocol.io) server that answers questions
+under the COLREGS and hands back the answer in a form a language model
+cannot quietly simplify: every lawful answer, every entry with its
+paragraph cite, and the verbatim rule text those cites resolve to. The
+rules are evaluated by
+[colregs-engine](https://github.com/mark-brannan/colregs-engine).
 
 It has no semantics of its own. The engine decides; this package only
 decides how the answer is written down. That is the whole job, and the
