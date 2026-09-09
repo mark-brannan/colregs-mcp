@@ -19,19 +19,13 @@ decides how the answer is written down. That is the whole job, and the
 
 ## Try it
 
-Not on npm yet. Clone and build:
+Register the stdio server with your client. Claude Code:
 
 ```bash
-git clone https://github.com/mark-brannan/colregs-mcp && cd colregs-mcp && npm install && npm run build
+claude mcp add colregs -- npx -y colregs-mcp
 ```
 
-Then register the stdio server with your client. Claude Code:
-
-```bash
-claude mcp add colregs -- node /absolute/path/to/colregs-mcp/dist/cli.js
-```
-
-Any other MCP client: command `node`, argument `dist/cli.js`, no
+Any other MCP client: command `npx`, arguments `-y colregs-mcp`, no
 environment.
 
 ## Tools
