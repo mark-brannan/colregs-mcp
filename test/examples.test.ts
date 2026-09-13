@@ -148,12 +148,8 @@ describe('applied_entries', () => {
   });
 });
 
-// colregs-engine exports encounter/conduct/rule2-departure from the day
-// they're named (its own src/index.ts comment); every one throws
-// NotImplementedError until its body lands. These assert the input schema
-// accepts a well-formed call and the failure surfaces the engine's own
-// verb/shape_fixed_by rather than a bare error string — so a real
-// implementation landing later needs no second integration pass here.
+// Every verb below is a colregs-engine stub; assert the input schema accepts
+// a well-formed call and the failure names verb/shape_fixed_by.
 describe('unbuilt verbs surface NotImplementedError, not a schema error', () => {
   const SITUATION = { own: { fact: SLOOP } };
 

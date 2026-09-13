@@ -50,13 +50,10 @@ then command `node`, argument `/absolute/path/to/colregs-mcp/dist/cli.js`.
 | `evaluate_conduct` | `trace` | kept/breached/pending verdicts, phase changes — **not built**, see below |
 | `evaluate_rule2_departure` | `situation`, `model` | region membership and advisories against a solved grid — **not built**, see below |
 
-The last five wrap the three verbs colregs-engine names but has not built
-(ADR 0011 §4, ADR 0012): it exports them from the day they're named, shape
-fixed and compiler-checked, and every one throws until its body lands. Calling
-one here today returns an error naming the verb and the ADR section that
-fixes its shape — that's colregs-engine's own contract, not a bug in this
-package. Wiring the tool surface up now means no second integration pass is
-needed once a release fills a body in.
+The last five wrap the three verbs colregs-engine names but hasn't built yet
+(ADR 0011 §4, ADR 0012) — stubs, exported from the day they're named. Calling
+one today errors, naming the verb and the ADR section that fixes its shape;
+that's colregs-engine's own contract, not a bug here.
 
 `facts` is a colregs fact record: the keys and values of colregs'
 `data/facts.json`, namespaced (`fact:propulsion`, `propulsion:sail`). The

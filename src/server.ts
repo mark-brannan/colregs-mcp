@@ -1,8 +1,5 @@
-// The tool surface: display (built), plus encounter, conduct and Rule 2
-// departure (colregs-engine's other three named verbs, still stubs — see
-// NOT_BUILT below), plus rule_text and light. Thin: each one calls the
-// engine or reads a data file, then hands the result to shape.ts or straight
-// through. No semantics of its own.
+// The tools. Thin: each one calls the engine or reads a data file, then
+// hands the result to shape.ts or straight through. No semantics of its own.
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
@@ -103,24 +100,15 @@ function factRecordSchema() {
   return z.object(shape).strict();
 }
 
-// evaluate_encounter, applied_encounter_entries, evaluate_conduct,
-// applied_conduct_entries and evaluate_rule2_departure wrap verbs ADR 0011
-// §4 and ADR 0012 name and colregs-engine exports from the day they are
-// named, compiler-checked, before their bodies are built (colregs-engine's
-// own src/index.ts comment). Every one throws NotImplementedError today;
-// wiring them up here now means the input schema and tool surface are
-// already right when a release fills the body in, rather than a second
-// integration pass later.
+// Below wraps colregs-engine's other three named verbs (ADR 0011 §4, ADR
+// 0012): stubs, exported from the day they're named, every one throwing
+// NotImplementedError until its body lands.
 const NOT_BUILT =
   'Not built yet: colregs-engine throws NotImplementedError for this verb. The shape ' +
   'below is fixed by the ADR named in the error; only the body is missing.';
 
-// Situation's kin/geo/hist/env namespaces (colregs-engine's generated
-// src/generated/situation.ts) are compile-time key sets colregs-engine does
-// not export at runtime, unlike facts.json, which this package reads
-// directly. So these fields are typed as open records of namespaced keys
-// (`kin:sog_kn`, `geo:range_m`, ...) rather than generated like FactsSchema
-// — the engine itself validates the keys and values it receives.
+// kin/geo/hist/env key sets are compile-time only in colregs-engine, unlike
+// facts.json — so these are open records, not generated like FactsSchema.
 const namespacedRecord = (prefix: string, note: string) =>
   z
     .record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()]))
@@ -177,7 +165,7 @@ const TraceSchema = z
           .strict(),
       )
       .min(1)
-      .describe('Strictly increasing t_s, the same two vessels throughout (not checked here — a Situation names no vessel).'),
+      .describe('Strictly increasing t_s, the same two vessels throughout.'),
   })
   .strict();
 
@@ -395,9 +383,7 @@ export function createServer(): McpServer {
       description:
         'Region membership for a situation under a named, pre-solved Rule 2(b) departure ' +
         'grid (model), with whatever escapes the grid holds, ranked best margin first. ' +
-        'The model is required and positional — there is no default grid — and every ' +
-        'advisory names the paragraphs it breaks and the grid it came from, never a claim ' +
-        'the Rules themselves recommend it. ' +
+        'The model is required and positional — there is no default grid. ' +
         NOT_BUILT +
         ' ' +
         NOT_FOR_NAVIGATION,
