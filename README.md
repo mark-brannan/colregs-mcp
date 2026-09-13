@@ -215,6 +215,13 @@ The one thing that leaves your machine is the install itself — `npx` or
 `npm install` fetching the package from the public npm registry, which is
 npm's transaction, not this server's.
 
+## Releasing
+
+Automatic from the release tag: npm, the MCP registry, and a `.mcpb` bundle
+attached to the GitHub Release. Getting that bundle onto Smithery and into
+the Claude connector directory is two by-hand steps, written down in
+[docs/releasing.md](docs/releasing.md).
+
 ## Licence
 
 Apache-2.0. Nothing here is advice to mariners; the fitness-for-navigation

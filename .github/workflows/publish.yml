@@ -68,6 +68,17 @@ jobs:
       - run: npm test
       - run: npm run build
 
+      # Before `npm publish`, because everything below this line is
+      # irreversible: a version that has been pushed to npm and to the MCP
+      # registry cannot be taken back, so a manifest that fails schema
+      # validation must fail the release while there is still nothing to undo.
+      # The pack itself runs at the end, once node_modules holds runtime
+      # dependencies only.
+      - name: Install mcpb and validate the manifest
+        run: |
+          npm install -g @anthropic-ai/mcpb
+          mcpb validate .
+
       # No NODE_AUTH_TOKEN -- authentication is the OIDC identity above.
       - run: npm publish
 
@@ -100,9 +111,7 @@ jobs:
       # this step attaches to the Release. See colregs-mcp#18.
       - name: Build the .mcpb bundle
         run: |
-          npm install -g @anthropic-ai/mcpb
           npm prune --omit=dev # tsc/vitest already ran; the bundle ships runtime deps only
-          mcpb validate .
           mcpb pack . colregs-mcp.mcpb
 
       - name: Attach the bundle to the GitHub Release

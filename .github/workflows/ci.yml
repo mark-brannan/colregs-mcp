@@ -29,8 +29,58 @@ jobs:
   # this job's id is part of the contract. `always()` is what lets the gate
   # evaluate when a dependency failed or was skipped, so it reports an explicit
   # pass or fail of its own rather than inheriting the skip.
+  # The .mcpb bundle a connector-directory or Smithery user installs is not the
+  # npm package: it is packed from a production install, and `.mcpbignore`
+  # deletes files out of it by hand. Nothing else in this repo would notice a
+  # pattern there that took a file the server reads at runtime -- typecheck,
+  # tests and build would all stay green and the bundle would fail on first
+  # use, offline, on someone else's machine. So this packs the real bundle and
+  # speaks to the unpacked copy the way a client does. Same reasoning as
+  # test/cli.integration.test.ts, one layer further out.
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run build
+
+      - name: Pack the bundle
+        run: |
+          npm install -g @anthropic-ai/mcpb
+          mcpb validate .
+          npm prune --omit=dev # what the release packs; see .github/workflows/publish.yml
+          mcpb pack . colregs-mcp.mcpb
+
+      - name: The unpacked bundle answers over stdio
+        run: |
+          unzip -q colregs-mcp.mcpb -d unpacked
+          {
+            echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}'
+            echo '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+            echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"evaluate_display","arguments":{"facts":{"fact:propulsion":"propulsion:sail","fact:position":"position:underway","fact:making_way":true,"fact:length_m":12}}}}'
+            echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"rule_text","arguments":{"cite":"25(b)"}}}'
+          } | node unpacked/dist/cli.js > out.jsonl
+
+          # Every id answered, none of them with an error and none with an
+          # isError result -- a tool that cannot read its data returns the
+          # failure in a result, not as a JSON-RPC error, so both are checked.
+          node -e '
+            const lines = require("fs").readFileSync("out.jsonl", "utf8").trim().split("\n");
+            const byId = new Map(lines.map((l) => JSON.parse(l)).map((m) => [m.id, m]));
+            for (const id of [1, 2, 3]) {
+              const m = byId.get(id);
+              if (!m) throw new Error(`no response to id ${id}`);
+              if (m.error) throw new Error(`id ${id} errored: ${JSON.stringify(m.error)}`);
+              if (m.result?.isError) throw new Error(`id ${id} returned isError: ${JSON.stringify(m.result).slice(0, 400)}`);
+            }
+            console.log("bundle answered initialize and 2 tool calls");
+          '
+
   ci-gate:
-    needs: [test]
+    needs: [test, bundle]
     if: always()
     # It reads nothing and writes nothing; the results go in as an input.
     permissions: {}
