@@ -50,10 +50,7 @@ then command `node`, argument `/absolute/path/to/colregs-mcp/dist/cli.js`.
 | `evaluate_conduct` | `trace` | kept/breached/pending verdicts, phase changes — **not built**, see below |
 | `evaluate_rule2_departure` | `situation`, `model` | region membership and advisories against a solved grid — **not built**, see below |
 
-The last five wrap the three verbs colregs-engine names but hasn't built yet
-(ADR 0011 §4, ADR 0012) — stubs, exported from the day they're named. Calling
-one today errors, naming the verb and the ADR section that fixes its shape;
-that's colregs-engine's own contract, not a bug here.
+The last five call colregs-engine verbs it has named but not built yet; each errors today, naming the verb and the ADR that fixes its shape.
 
 `facts` is a colregs fact record: the keys and values of colregs'
 `data/facts.json`, namespaced (`fact:propulsion`, `propulsion:sail`). The
