@@ -28,7 +28,7 @@ on:
   # vX.Y.Z` instead.
 
 permissions:
-  contents: read # release-please.yml creates the tag and the GitHub Release
+  contents: write # release-please.yml creates the tag/Release; this workflow also uploads the .mcpb asset to it
   id-token: write # required: this is what mints the OIDC token
 
 jobs:
@@ -88,3 +88,24 @@ jobs:
             | tar xz mcp-publisher
           ./mcp-publisher login github-oidc
           ./mcp-publisher publish
+
+      # colregs-mcp#18: a prebuilt bundle for Smithery and the Claude connector
+      # directory, both of which have moved off repo scanning for a stdio
+      # server. Built from the same tag as the npm/registry publish above, so
+      # the bundle is always the released version.
+      #
+      # Uploading to Smithery (`smithery mcp publish`) and submitting to the
+      # Claude connector directory (a web form) both need an account this
+      # workflow doesn't have -- those stay human steps, done from the asset
+      # this step attaches to the Release. See colregs-mcp#18.
+      - name: Build the .mcpb bundle
+        run: |
+          npm install -g @anthropic-ai/mcpb
+          npm prune --omit=dev # tsc/vitest already ran; the bundle ships runtime deps only
+          mcpb validate .
+          mcpb pack . colregs-mcp.mcpb
+
+      - name: Attach the bundle to the GitHub Release
+        run: gh release upload "${GITHUB_REF_NAME}" colregs-mcp.mcpb --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
