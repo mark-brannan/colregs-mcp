@@ -1,0 +1,18 @@
+# The bundle runs offline from ${__dirname}, so everything inside it should be
+# something the server actually loads. It is packed from a production install
+# (`npm prune --omit=dev`), which settles the dependency tree; this file
+# removes what survives that and is still never read at runtime.
+
+# src/data.ts reads exactly four files out of the colregs data package --
+# data/{rules,lights,facts,applicability}.json -- plus its package.json for the
+# version check. The Navigation Rules handbook diagrams are 9.4 MB on their
+# own, and the cross-implementation fixtures, prose and JSON Schemas are for
+# people building against the data, not for a server consuming it.
+node_modules/colregs/images/
+node_modules/colregs/fixtures/
+node_modules/colregs/docs/
+node_modules/colregs/schema/
+
+# TypeScript sources shipped beside the compiled output they were built from.
+# Nothing resolves them at runtime; zod's are 2.9 MB.
+node_modules/zod/src/
