@@ -1,10 +1,19 @@
-// The four tools. Thin: each one calls the engine or reads a data file, then
-// hands the result to shape.ts. No semantics of its own.
+// The tools. Thin: each one calls the engine or reads a data file, then
+// hands the result to shape.ts or straight through. No semantics of its own.
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { appliedDisplayEntries, evaluateDisplay } from 'colregs-engine';
-import type { FactRecord } from 'colregs-engine';
+import {
+  appliedConductEntries,
+  appliedDisplayEntries,
+  appliedEncounterEntries,
+  evaluateConduct,
+  evaluateDisplay,
+  evaluateEncounter,
+  evaluateRule2Departure,
+  NotImplementedError,
+} from 'colregs-engine';
+import type { FactRecord, Rule2DepartureModel, Situation, Trace } from 'colregs-engine';
 import { z } from 'zod';
 
 import { COLREGS_VERSION, facts as factsData, lights, paragraphKeys, rules } from './data.js';
@@ -91,6 +100,75 @@ function factRecordSchema() {
   return z.object(shape).strict();
 }
 
+// Below wraps colregs-engine's other three named verbs (ADR 0011 §4, ADR
+// 0012): stubs, exported from the day they're named, every one throwing
+// NotImplementedError until its body lands.
+const NOT_BUILT =
+  'Not built yet: colregs-engine throws NotImplementedError for this verb. The shape ' +
+  'below is fixed by the ADR named in the error; only the body is missing.';
+
+// kin/geo/hist/env key sets are compile-time only in colregs-engine, unlike
+// facts.json — so these are open records, not generated like FactsSchema.
+const namespacedRecord = (prefix: string, note: string) =>
+  z
+    .record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()]))
+    .optional()
+    .describe(`Keys namespaced \`${prefix}:*\` per colregs-engine's Situation type. ${note}`);
+
+function subjectSchema() {
+  return z
+    .object({
+      fact: z.lazy(() => factRecordSchema()).describe('A fact record for this vessel; same vocabulary as evaluate_display.'),
+      kin: namespacedRecord('kin', 'Absolute kinematic state (position, heading, speed, dynamics).'),
+      geo: namespacedRecord('geo', "Geometry measured from this vessel's own frame (relative bearing, windward)."),
+      hist: namespacedRecord('hist', 'What has already been true of this encounter and latches.'),
+    })
+    .strict();
+}
+
+function situationSchema() {
+  return z
+    .object({
+      own: subjectSchema().describe('The vessel whose obligations are being evaluated.'),
+      other: subjectSchema().optional().describe('The other vessel, when this is a two-vessel encounter.'),
+      pair: z
+        .object({
+          geo: namespacedRecord('geo', 'Geometry symmetric between the two vessels (range, CPA, TCPA, in_sight).'),
+          env: namespacedRecord('env', 'Where the encounter is happening, not a property of either vessel.'),
+        })
+        .strict()
+        .optional(),
+    })
+    .strict();
+}
+
+const SolverParametersSchema = z.object({
+  dynamics: z.array(z.string()).describe('Vessel dynamics classes the grid covers, e.g. "dynamics:cargo".'),
+  horizon_s: z.number(),
+  cadence_s: z.number(),
+  separation_m: z.number(),
+  information: z.enum(['full', 'partial']),
+  adversary: z.enum(['compliant', 'physics']),
+});
+
+const Rule2DepartureModelSchema = SolverParametersSchema.extend({
+  version: z.string().describe('Names the solved grid immutably.'),
+  colregs_version: z.string().describe('The colregs release the grid was solved against.'),
+}).strict();
+
+const TraceSchema = z
+  .object({
+    samples: z
+      .array(
+        z
+          .object({ t_s: z.number(), situation: situationSchema() })
+          .strict(),
+      )
+      .min(1)
+      .describe('Strictly increasing t_s, the same two vessels throughout.'),
+  })
+  .strict();
+
 // First field of every response, success or error. Descriptions are read once
 // at connect time; the response is what a model has in front of it when it answers.
 export const RESPONSE_WARNING =
@@ -117,6 +195,9 @@ function withEngine<T>(fn: () => T): CallToolResult {
   try {
     return json(fn());
   } catch (e) {
+    if (e instanceof NotImplementedError) {
+      return failure(e.message, { verb: e.verb, shape_fixed_by: e.shapeFixedBy });
+    }
     return failure(e instanceof Error ? e.message : String(e));
   }
 }
@@ -228,6 +309,89 @@ export function createServer(): McpServer {
         bearing_convention: lights.bearing_convention,
       });
     },
+  );
+
+  server.registerTool(
+    'applied_encounter_entries',
+    {
+      title: 'Applied encounter applicability entries',
+      description:
+        'The colregs `scope`, `classification` and `precedence` entries whose predicate ' +
+        'holds for a two-vessel situation, without resolving roles or risk of collision. ' +
+        NOT_BUILT +
+        ' ' +
+        NOT_FOR_NAVIGATION,
+      inputSchema: { situation: situationSchema() },
+      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    ({ situation }) => withEngine(() => appliedEncounterEntries(situation as Situation)),
+  );
+
+  server.registerTool(
+    'evaluate_encounter',
+    {
+      title: 'Evaluate an encounter',
+      description:
+        'What kind of encounter two vessels are in (head-on, crossing, overtaking), whether ' +
+        'risk of collision is asserted and by which entries, and each vessel’s roles ' +
+        '(stand-on, give-way, shall-not-impede, ...) with rel:overrides resolved. ' +
+        NOT_BUILT +
+        ' ' +
+        NOT_FOR_NAVIGATION,
+      inputSchema: { situation: situationSchema() },
+      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    ({ situation }) => withEngine(() => evaluateEncounter(situation as Situation)),
+  );
+
+  server.registerTool(
+    'applied_conduct_entries',
+    {
+      title: 'Applied conduct applicability entries',
+      description:
+        'The ids of the conduct entries that attached anywhere over a trace window, without ' +
+        'judging whether they were kept. ' +
+        NOT_BUILT +
+        ' ' +
+        NOT_FOR_NAVIGATION,
+      inputSchema: { trace: TraceSchema },
+      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    ({ trace }) => withEngine(() => appliedConductEntries(trace as Trace)),
+  );
+
+  server.registerTool(
+    'evaluate_conduct',
+    {
+      title: 'Evaluate conduct over a trace',
+      description:
+        'One verdict (kept, breached, pending) per applied conduct entry per subject it ' +
+        'attached to, plus Rule 13(d)/17 phase changes, over a trace of situation samples. ' +
+        NOT_BUILT +
+        ' ' +
+        NOT_FOR_NAVIGATION,
+      inputSchema: { trace: TraceSchema },
+      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    ({ trace }) => withEngine(() => evaluateConduct(trace as Trace)),
+  );
+
+  server.registerTool(
+    'evaluate_rule2_departure',
+    {
+      title: 'Evaluate Rule 2 departure against a solved region grid',
+      description:
+        'Region membership for a situation under a named, pre-solved Rule 2(b) departure ' +
+        'grid (model), with whatever escapes the grid holds, ranked best margin first. ' +
+        'The model is required and positional — there is no default grid. ' +
+        NOT_BUILT +
+        ' ' +
+        NOT_FOR_NAVIGATION,
+      inputSchema: { situation: situationSchema(), model: Rule2DepartureModelSchema },
+      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    ({ situation, model }) =>
+      withEngine(() => evaluateRule2Departure(situation as Situation, model as Rule2DepartureModel)),
   );
 
   return server;

@@ -44,6 +44,13 @@ then command `node`, argument `/absolute/path/to/colregs-mcp/dist/cli.js`.
 | `applied_entries` | `facts` | the applicability entries that hold, as `{id, cite}` |
 | `rule_text` | `cite` | verbatim paragraph text from colregs `data/rules.json` |
 | `light` | `id` | a light's definition from colregs `data/lights.json` |
+| `applied_encounter_entries` | `situation` | scope/classification/precedence entries that hold — **not built**, see below |
+| `evaluate_encounter` | `situation` | encounter type, risk of collision, roles — **not built**, see below |
+| `applied_conduct_entries` | `trace` | conduct entries that attached over a window — **not built**, see below |
+| `evaluate_conduct` | `trace` | kept/breached/pending verdicts, phase changes — **not built**, see below |
+| `evaluate_rule2_departure` | `situation`, `model` | region membership and advisories against a solved grid — **not built**, see below |
+
+The last five call colregs-engine verbs it has named but not built yet; each errors today, naming the verb and the ADR that fixes its shape.
 
 `facts` is a colregs fact record: the keys and values of colregs'
 `data/facts.json`, namespaced (`fact:propulsion`, `propulsion:sail`). The

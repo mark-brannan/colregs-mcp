@@ -41,7 +41,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
     "colregs": "^0.2.0",
-    "colregs-engine": "^0.1.3",
+    "colregs-engine": "^0.1.4",
     "zod": "^4.0.0"
   },
   "devDependencies": {

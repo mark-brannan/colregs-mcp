@@ -148,6 +148,42 @@ describe('applied_entries', () => {
   });
 });
 
+// Every verb below is a colregs-engine stub; assert the input schema accepts
+// a well-formed call and the failure names verb/shape_fixed_by.
+describe('unbuilt verbs surface NotImplementedError, not a schema error', () => {
+  const SITUATION = { own: { fact: SLOOP } };
+
+  it.each([
+    ['applied_encounter_entries', { situation: SITUATION }, 'appliedEncounterEntries'],
+    ['evaluate_encounter', { situation: SITUATION }, 'evaluateEncounter'],
+    ['applied_conduct_entries', { trace: { samples: [{ t_s: 0, situation: SITUATION }] } }, 'appliedConductEntries'],
+    ['evaluate_conduct', { trace: { samples: [{ t_s: 0, situation: SITUATION }] } }, 'evaluateConduct'],
+    [
+      'evaluate_rule2_departure',
+      {
+        situation: SITUATION,
+        model: {
+          version: 'grid-1',
+          colregs_version: '0.2.0',
+          dynamics: ['dynamics:cargo'],
+          horizon_s: 60,
+          cadence_s: 1,
+          separation_m: 50,
+          information: 'full',
+          adversary: 'compliant',
+        },
+      },
+      'evaluateRule2Departure',
+    ],
+  ])('%s: accepted input, unbuilt body', async (tool, args, verb) => {
+    const { isError, body } = await call(client, tool, args);
+    expect(isError).toBe(true);
+    expect(body.verb).toBe(verb);
+    expect(body.shape_fixed_by).toEqual(expect.any(String));
+    expect(body.error).toContain('not built');
+  });
+});
+
 describe('rule_text', () => {
   it('returns verbatim paragraph text with its source', async () => {
     const { isError, body } = await call(client, 'rule_text', { cite: '25(b)' });
@@ -243,7 +279,17 @@ describe('the not-for-navigation warning reaches every surface', () => {
 describe('tool descriptions', () => {
   it('every tool carries the not-for-navigation line and coverage limits', async () => {
     const { tools } = await client.listTools();
-    expect(tools.map((t) => t.name).sort()).toEqual(['applied_entries', 'evaluate_display', 'light', 'rule_text']);
+    expect(tools.map((t) => t.name).sort()).toEqual([
+      'applied_conduct_entries',
+      'applied_encounter_entries',
+      'applied_entries',
+      'evaluate_conduct',
+      'evaluate_display',
+      'evaluate_encounter',
+      'evaluate_rule2_departure',
+      'light',
+      'rule_text',
+    ]);
     for (const t of tools) {
       expect(t.description).toContain('Not for navigation.');
       expect(t.description).toContain('Part C lights only');
