@@ -44,6 +44,19 @@ then command `node`, argument `/absolute/path/to/colregs-mcp/dist/cli.js`.
 | `applied_entries` | `facts` | the applicability entries that hold, as `{id, cite}` |
 | `rule_text` | `cite` | verbatim paragraph text from colregs `data/rules.json` |
 | `light` | `id` | a light's definition from colregs `data/lights.json` |
+| `applied_encounter_entries` | `situation` | scope/classification/precedence entries that hold — **not built**, see below |
+| `evaluate_encounter` | `situation` | encounter type, risk of collision, roles — **not built**, see below |
+| `applied_conduct_entries` | `trace` | conduct entries that attached over a window — **not built**, see below |
+| `evaluate_conduct` | `trace` | kept/breached/pending verdicts, phase changes — **not built**, see below |
+| `evaluate_rule2_departure` | `situation`, `model` | region membership and advisories against a solved grid — **not built**, see below |
+
+The last five wrap the three verbs colregs-engine names but has not built
+(ADR 0011 §4, ADR 0012): it exports them from the day they're named, shape
+fixed and compiler-checked, and every one throws until its body lands. Calling
+one here today returns an error naming the verb and the ADR section that
+fixes its shape — that's colregs-engine's own contract, not a bug in this
+package. Wiring the tool surface up now means no second integration pass is
+needed once a release fills a body in.
 
 `facts` is a colregs fact record: the keys and values of colregs'
 `data/facts.json`, namespaced (`fact:propulsion`, `propulsion:sail`). The
