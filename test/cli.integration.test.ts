@@ -46,10 +46,20 @@ const callCli = async (name: string, args: Record<string, unknown>) => {
 };
 
 describe('the built CLI over real stdio', () => {
-  it('loads, handshakes and reports its four tools', async () => {
+  it('loads, handshakes and reports its tools', async () => {
     expect(client.getServerVersion()?.name).toBe('colregs-mcp');
     const { tools } = await client.listTools();
-    expect(tools.map((t) => t.name).sort()).toEqual(['applied_entries', 'evaluate_display', 'light', 'rule_text']);
+    expect(tools.map((t) => t.name).sort()).toEqual([
+      'applied_conduct_entries',
+      'applied_encounter_entries',
+      'applied_entries',
+      'evaluate_conduct',
+      'evaluate_display',
+      'evaluate_encounter',
+      'evaluate_rule2_departure',
+      'light',
+      'rule_text',
+    ]);
   });
 
   it('answers from the packaged colregs data, not just from src', async () => {
