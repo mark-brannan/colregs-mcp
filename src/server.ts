@@ -100,12 +100,16 @@ function factRecordSchema() {
   return z.object(shape).strict();
 }
 
-// Below wraps colregs-engine's other three named verbs (ADR 0011 §4, ADR
-// 0012): stubs, exported from the day they're named, every one throwing
-// NotImplementedError until its body lands.
-const NOT_BUILT =
-  'Not built yet: colregs-engine throws NotImplementedError for this verb. The shape ' +
-  'below is fixed by the ADR named in the error; only the body is missing.';
+// Below wraps colregs-engine's other four named verbs (ADR 0011 §4, ADR
+// 0012). colregs-engine now implements all of them; this package still
+// passes each result through unshaped -- no cites resolved, no modality
+// paired with its light -- so a caller gets exactly what the engine
+// returns. Giving these the same treatment evaluate_display gets in
+// shape.ts is tracked separately, not part of following colregs-engine
+// onto main.
+const UNSHAPED =
+  'The result is passed through from colregs-engine as-is, without the id/cite ' +
+  'resolution or modality pairing evaluate_display and rule_text provide.';
 
 // kin/geo/hist/env key sets are compile-time only in colregs-engine, unlike
 // facts.json — so these are open records, not generated like FactsSchema.
@@ -129,7 +133,7 @@ function subjectSchema() {
 function situationSchema() {
   return z
     .object({
-      own: subjectSchema().describe('The vessel whose obligations are being evaluated.'),
+      self: subjectSchema().describe('The vessel whose obligations are being evaluated.'),
       other: subjectSchema().optional().describe('The other vessel, when this is a two-vessel encounter.'),
       pair: z
         .object({
@@ -196,7 +200,7 @@ function withEngine<T>(fn: () => T): CallToolResult {
     return json(fn());
   } catch (e) {
     if (e instanceof NotImplementedError) {
-      return failure(e.message, { verb: e.verb, shape_fixed_by: e.shapeFixedBy });
+      return failure(e.message, { verb: e.verb, missing: e.missing });
     }
     return failure(e instanceof Error ? e.message : String(e));
   }
@@ -215,9 +219,9 @@ export function createServer(): McpServer {
         'Every complete, lawful set of navigation lights one vessel may show, from a ' +
         'fact record (propulsion, activity, position, length, and the other facts ' +
         'in colregs data/facts.json) under the COLREGS. Returns the applied entries; ' +
-        'exempted (relieved by a rel:exempts entry), excluded (barred by a required ' +
-        "entry's rel:excludes) and overridden (displaced by a superior obligation's " +
-        'rel:overrides) entries, each with the entry that did it; and lawful_displays: ' +
+        'exempted (relieved by a rel:exempts entry) and overridden (displaced by a ' +
+        "superior obligation's rel:overrides) entries, each with the entry that did it; " +
+        'and lawful_displays: ' +
         '{count, relation, options}. relation is "none", "exactly_one" or "any_one_of". ' +
         PLURAL_ANSWER +
         ' optional_additions are lawful extras (relation any_subset_of) that do not ' +
@@ -318,7 +322,7 @@ export function createServer(): McpServer {
       description:
         'The colregs `scope`, `classification` and `precedence` entries whose predicate ' +
         'holds for a two-vessel situation, without resolving roles or risk of collision. ' +
-        NOT_BUILT +
+        UNSHAPED +
         ' ' +
         NOT_FOR_NAVIGATION,
       inputSchema: { situation: situationSchema() },
@@ -335,7 +339,7 @@ export function createServer(): McpServer {
         'What kind of encounter two vessels are in (head-on, crossing, overtaking), whether ' +
         'risk of collision is asserted and by which entries, and each vessel’s roles ' +
         '(stand-on, give-way, shall-not-impede, ...) with rel:overrides resolved. ' +
-        NOT_BUILT +
+        UNSHAPED +
         ' ' +
         NOT_FOR_NAVIGATION,
       inputSchema: { situation: situationSchema() },
@@ -351,7 +355,7 @@ export function createServer(): McpServer {
       description:
         'The ids of the conduct entries that attached anywhere over a trace window, without ' +
         'judging whether they were kept. ' +
-        NOT_BUILT +
+        UNSHAPED +
         ' ' +
         NOT_FOR_NAVIGATION,
       inputSchema: { trace: TraceSchema },
@@ -367,7 +371,7 @@ export function createServer(): McpServer {
       description:
         'One verdict (kept, breached, pending) per applied conduct entry per subject it ' +
         'attached to, plus Rule 13(d)/17 phase changes, over a trace of situation samples. ' +
-        NOT_BUILT +
+        UNSHAPED +
         ' ' +
         NOT_FOR_NAVIGATION,
       inputSchema: { trace: TraceSchema },
@@ -384,7 +388,7 @@ export function createServer(): McpServer {
         'Region membership for a situation under a named, pre-solved Rule 2(b) departure ' +
         'grid (model), with whatever escapes the grid holds, ranked best margin first. ' +
         'The model is required and positional — there is no default grid. ' +
-        NOT_BUILT +
+        UNSHAPED +
         ' ' +
         NOT_FOR_NAVIGATION,
       inputSchema: { situation: situationSchema(), model: Rule2DepartureModelSchema },

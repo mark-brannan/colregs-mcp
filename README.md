@@ -75,35 +75,35 @@ Trimmed response:
 
 ```json
 {
-  "colregs": { "version": "0.2.0", "source": "resolved" },
+  "colregs": { "version": "0.3.4", "source": "resolved" },
   "applied": [
-    { "id": "25a", "cite": "25(a)", "modality": "shall" },
-    { "id": "25b", "cite": "25(b)", "modality": "may" },
-    { "id": "25c", "cite": "25(c)", "modality": "may" }
+    { "id": "rule:25a", "cite": "25(a)", "modality": "modality:shall" },
+    { "id": "rule:25b", "cite": "25(b)", "modality": "modality:may" },
+    { "id": "rule:25c", "cite": "25(c)", "modality": "modality:may" }
   ],
-  "exempted": [], "excluded": [],
+  "exempted": [], "overridden": [],
   "lawful_displays": {
     "count": 3,
     "relation": "any_one_of",
     "options": [
       { "option": 1, "of": 3, "chosen": [],
         "lights": [
-          { "light": "light:sidelights", "name": "sidelights", "modality": "shall", "prescribed_by": { "id": "25a", "cite": "25(a)" } },
-          { "light": "light:sternlight", "name": "sternlight", "modality": "shall", "prescribed_by": { "id": "25a", "cite": "25(a)" } } ] },
-      { "option": 2, "of": 3, "chosen": [ { "id": "25b", "cite": "25(b)", "modality": "may" } ],
+          { "light": "light:sidelights", "name": "sidelights", "modality": "modality:shall", "prescribed_by": { "id": "rule:25a", "cite": "25(a)" } },
+          { "light": "light:sternlight", "name": "sternlight", "modality": "modality:shall", "prescribed_by": { "id": "rule:25a", "cite": "25(a)" } } ] },
+      { "option": 2, "of": 3, "chosen": [ { "id": "rule:25b", "cite": "25(b)", "modality": "modality:may" } ],
         "lights": [
-          { "light": "light:sidelights", "name": "sidelights", "combined": true, "position": "at or near the top of the mast", "modality": "may", "prescribed_by": { "id": "25b", "cite": "25(b)" } },
-          { "light": "light:sternlight", "name": "sternlight", "combined": true, "position": "at or near the top of the mast", "modality": "may", "prescribed_by": { "id": "25b", "cite": "25(b)" } } ] },
-      { "option": 3, "of": 3, "chosen": [ { "id": "25c", "cite": "25(c)", "modality": "may" } ],
+          { "light": "light:sidelights", "name": "sidelights", "combined": true, "position": "at or near the top of the mast", "modality": "modality:may", "prescribed_by": { "id": "rule:25b", "cite": "25(b)" } },
+          { "light": "light:sternlight", "name": "sternlight", "combined": true, "position": "at or near the top of the mast", "modality": "modality:may", "prescribed_by": { "id": "rule:25b", "cite": "25(b)" } } ] },
+      { "option": 3, "of": 3, "chosen": [ { "id": "rule:25c", "cite": "25(c)", "modality": "modality:may" } ],
         "lights": [
-          { "light": "light:sidelights", "name": "sidelights", "modality": "shall", "prescribed_by": { "id": "25a", "cite": "25(a)" } },
-          { "light": "light:sternlight", "name": "sternlight", "modality": "shall", "prescribed_by": { "id": "25a", "cite": "25(a)" } },
-          { "light": "light:all_round", "name": "all-round light", "color": "red", "count": 1, "position": "upper, at or near the top of the mast", "modality": "may", "prescribed_by": { "id": "25c", "cite": "25(c)" } },
-          { "light": "light:all_round", "name": "all-round light", "color": "green", "count": 1, "position": "lower, at or near the top of the mast", "modality": "may", "prescribed_by": { "id": "25c", "cite": "25(c)" } } ] }
+          { "light": "light:sidelights", "name": "sidelights", "modality": "modality:shall", "prescribed_by": { "id": "rule:25a", "cite": "25(a)" } },
+          { "light": "light:sternlight", "name": "sternlight", "modality": "modality:shall", "prescribed_by": { "id": "rule:25a", "cite": "25(a)" } },
+          { "light": "light:all_round", "name": "all-round light", "color": "red", "count": 1, "position": "upper, at or near the top of the mast", "modality": "modality:may", "prescribed_by": { "id": "rule:25c", "cite": "25(c)" } },
+          { "light": "light:all_round", "name": "all-round light", "color": "green", "count": 1, "position": "lower, at or near the top of the mast", "modality": "modality:may", "prescribed_by": { "id": "rule:25c", "cite": "25(c)" } } ] }
     ]
   },
   "optional_additions": { "relation": "any_subset_of", "items": [] },
-  "modality_key": { "shall": "mandatory", "may": "permitted alternative" },
+  "modality_key": { "modality:shall": "mandatory", "modality:may": "permitted alternative" },
   "cited_paragraphs": {
     "25(a)": "A sailing vessel underway shall exhibit: (i) sidelights; (ii) a sternlight.",
     "25(b)": "In a sailing vessel of less than 20 meters in length the lights prescribed in Rule 25(a) may be combined in one lantern carried at or near the top of the mast where it can best be seen.",
@@ -131,25 +131,24 @@ Trimmed response:
 ```json
 {
   "applied": [
-    { "id": "30d-anchor", "cite": "30(d)", "modality": "shall" },
-    { "id": "30d-red", "cite": "30(d)", "modality": "shall-if-practicable" }
+    { "id": "rule:30d", "cite": "30(d)", "modality": "modality:shall" },
+    { "id": "rule:30d_i", "cite": "30(d)(i)", "modality": "modality:shall-if-practicable" }
   ],
-  "excluded": [],
   "lawful_displays": {
     "count": 2, "relation": "any_one_of",
     "options": [
-      { "option": 1, "of": 2, "chosen": [ { "id": "30a", "cite": "30(a)", "modality": "shall" } ],
+      { "option": 1, "of": 2, "chosen": [ { "id": "rule:30a", "cite": "30(a)", "modality": "modality:shall" } ],
         "lights": [
-          { "light": "light:all_round", "color": "red",   "count": 2, "arrangement": "vertical", "modality": "shall-if-practicable", "prescribed_by": { "id": "30d-red", "cite": "30(d)" } },
-          { "light": "light:all_round", "color": "white", "count": 1, "position": "in the fore part", "modality": "shall", "prescribed_by": { "id": "30a", "cite": "30(a)" }, "via": { "id": "30d-anchor", "cite": "30(d)" } },
-          { "light": "light:all_round", "color": "white", "count": 1, "position": "at or near the stern, at a lower level than the fore one", "modality": "shall", "prescribed_by": { "id": "30a", "cite": "30(a)" }, "via": { "id": "30d-anchor", "cite": "30(d)" } } ] },
-      { "option": 2, "of": 2, "chosen": [ { "id": "30b", "cite": "30(b)", "modality": "may" } ],
+          { "light": "light:all_round", "color": "red",   "count": 2, "arrangement": "vertical", "modality": "modality:shall-if-practicable", "prescribed_by": { "id": "rule:30d_i", "cite": "30(d)(i)" } },
+          { "light": "light:all_round", "color": "white", "count": 1, "position": "in the fore part", "modality": "modality:shall", "prescribed_by": { "id": "rule:30a", "cite": "30(a)" }, "via": { "id": "rule:30d", "cite": "30(d)" } },
+          { "light": "light:all_round", "color": "white", "count": 1, "position": "at or near the stern, at a lower level than the fore one", "modality": "modality:shall", "prescribed_by": { "id": "rule:30a", "cite": "30(a)" }, "via": { "id": "rule:30d", "cite": "30(d)" } } ] },
+      { "option": 2, "of": 2, "chosen": [ { "id": "rule:30b", "cite": "30(b)", "modality": "modality:may" } ],
         "lights": [
-          { "light": "light:all_round", "color": "red",   "count": 2, "arrangement": "vertical", "modality": "shall-if-practicable", "prescribed_by": { "id": "30d-red", "cite": "30(d)" } },
-          { "light": "light:all_round", "color": "white", "count": 1, "position": "where it can best be seen", "modality": "may", "prescribed_by": { "id": "30b", "cite": "30(b)" }, "via": { "id": "30d-anchor", "cite": "30(d)" } } ] }
+          { "light": "light:all_round", "color": "red",   "count": 2, "arrangement": "vertical", "modality": "modality:shall-if-practicable", "prescribed_by": { "id": "rule:30d_i", "cite": "30(d)(i)" } },
+          { "light": "light:all_round", "color": "white", "count": 1, "position": "where it can best be seen", "modality": "modality:may", "prescribed_by": { "id": "rule:30b", "cite": "30(b)" }, "via": { "id": "rule:30d", "cite": "30(d)" } } ] }
     ]
   },
-  "modality_key": { "shall": "mandatory", "may": "permitted alternative", "shall-if-practicable": "mandatory where practicable, with a stated fallback" },
+  "modality_key": { "modality:shall": "mandatory", "modality:may": "permitted alternative", "modality:shall-if-practicable": "mandatory where practicable, with a stated fallback" },
   "cited_paragraphs": { "30(a)": "…", "30(b)": "…", "30(d)": "…" }
 }
 ```
@@ -166,7 +165,8 @@ Three properties, each tested in `test/examples.test.ts`:
 
 1. **Cited, verbatim.** Every entry id travels with its paragraph cite, and
    `cited_paragraphs` holds the text of every paragraph a response cites,
-   straight from colregs `data/rules.json`. This package writes no prose of
+   straight from colregs' international USCG-amalgamated text corpus
+   (`data/text/intl/2016/en-US.uscg.json`). This package writes no prose of
    its own into a response; the only sentences in it are the Rules'.
 2. **Modality per light.** `shall`, `may`, `shall-if-practicable` and the
    rest are kept on each light, not summarised per display. Option 3 above

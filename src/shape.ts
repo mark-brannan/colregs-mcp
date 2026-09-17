@@ -58,13 +58,8 @@ export interface EvaluateDisplayResponse {
   facts: FactRecord;
   applied: CitedModal[];
   exempted: CitedBy[];
-  excluded: CitedBy[];
   /** Applied entries displaced by a superior applied obligation's
-   * rel:overrides, with the overriding id (colregs-engine#36). Kept apart
-   * from `excluded` rather than merged into it: `excluded` is barred by a
-   * rel:excludes constraint, `overridden` is displaced by a rel:overrides
-   * obligation — different mechanisms, so a reader can tell which one
-   * removed the entry without inspecting `by`. */
+   * rel:overrides, with the overriding id (colregs-engine#36). */
   overridden: CitedBy[];
   lawful_displays: {
     count: number;
@@ -86,7 +81,7 @@ function shapeLight(l: DisplayLight, modalities: Record<string, string>): Shaped
   const def = lights.lights[light];
   const out: ShapedLight = {
     light,
-    ...(def && typeof def.name === 'string' ? { name: def.name } : {}),
+    ...(def && typeof def.term === 'string' ? { name: def.term } : {}),
     ...rest,
     modality: l.modality ?? modalities[l.sourceEntry],
     prescribed_by: cited(l.sourceEntry),
@@ -117,7 +112,7 @@ export function shapeEvaluation(facts: FactRecord, ev: DisplayEvaluation): Evalu
 
   const cites = new Set<string>();
   for (const id of ev.applied) cites.add(citeOf(id));
-  for (const x of [...ev.exempted, ...ev.excluded, ...ev.overridden]) {
+  for (const x of [...ev.exempted, ...ev.overridden]) {
     cites.add(citeOf(x.id));
     cites.add(citeOf(x.by));
   }
@@ -137,7 +132,6 @@ export function shapeEvaluation(facts: FactRecord, ev: DisplayEvaluation): Evalu
     facts,
     applied: ev.applied.map(modal),
     exempted: ev.exempted.map((x) => ({ ...cited(x.id), by: cited(x.by) })),
-    excluded: ev.excluded.map((x) => ({ ...cited(x.id), by: cited(x.by) })),
     overridden: ev.overridden.map((x) => ({ ...cited(x.id), by: cited(x.by) })),
     lawful_displays: { count, relation, options },
     optional_additions: { relation: 'any_subset_of', items: additions },

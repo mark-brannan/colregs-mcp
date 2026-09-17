@@ -40,8 +40,8 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "colregs": "^0.2.0",
-    "colregs-engine": "^0.1.4",
+    "colregs": "github:mark-brannan/colregs#main",
+    "colregs-engine": "github:mark-brannan/colregs-engine#main",
     "zod": "^4.0.0"
   },
   "devDependencies": {
