@@ -59,7 +59,40 @@ interface ApplicabilityData {
   entries: { id: string; cite: string }[];
 }
 
-export const rules = require('colregs/data/rules.json') as RulesData;
+// colregs (ADR 0020) split rules.json into a language-neutral skeleton
+// (path/rule/jurisdiction, no text) plus per-edition text corpora under
+// data/text/. This tool has always quoted the USCG amalgamated
+// international text (server.ts's rule_text description says so), so that
+// corpus -- intl@2016.en-US.uscg, per data/corpora.json -- is the one read
+// here; a jurisdiction/edition/language switch is a product decision, not
+// part of following colregs onto main.
+interface RulesSkeleton {
+  note: string;
+  paragraphs: Record<string, { path: string; rule: string; jurisdiction: string }>;
+}
+interface RulesTextCorpus {
+  source: { publisher: string; title: string; url: string; retrieved: string };
+  note: string;
+  gaps: { path: string; reason: string }[];
+  paragraphs: Record<string, { rule_title: string; text: string }>;
+}
+
+const rulesSkeleton = require('colregs/data/rules.json') as RulesSkeleton;
+const rulesText = require('colregs/data/text/intl/2016/en-US.uscg.json') as RulesTextCorpus;
+
+export const rules: RulesData = {
+  source: rulesText.source.publisher,
+  source_url: rulesText.source.url,
+  retrieved: rulesText.source.retrieved,
+  note: rulesText.note,
+  gaps: rulesText.gaps,
+  paragraphs: Object.fromEntries(
+    Object.entries(rulesText.paragraphs).map(([path, t]) => [
+      path,
+      { path, rule: rulesSkeleton.paragraphs[path].rule, jurisdiction: rulesSkeleton.paragraphs[path].jurisdiction, ...t },
+    ]),
+  ),
+};
 export const lights = require('colregs/data/lights.json') as LightsData;
 export const facts = require('colregs/data/facts.json') as FactsData;
 const applicability = require('colregs/data/applicability.json') as ApplicabilityData;

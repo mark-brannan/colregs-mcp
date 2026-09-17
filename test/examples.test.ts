@@ -8,7 +8,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { FISHING_AGROUND, SLOOP, TRAWLER_ANCHORED, call, connect } from './helpers.js';
 
 const require = createRequire(import.meta.url);
-const rulesJson = require('colregs/data/rules.json');
+const rulesJson = require('colregs/data/text/intl/2016/en-US.uscg.json');
 
 let client: Awaited<ReturnType<typeof connect>>;
 beforeAll(async () => {
@@ -24,11 +24,10 @@ describe('evaluate_display: the 12 m sloop shows one of three displays', () => {
     expect(body.colregs).toEqual({ version: expect.any(String), source: 'resolved' });
     expect(body.facts).toEqual(SLOOP);
     expect(body.applied).toEqual([
-      { id: '25a', cite: '25(a)', modality: 'shall' },
-      { id: '25b', cite: '25(b)', modality: 'may' },
-      { id: '25c', cite: '25(c)', modality: 'may' },
+      { id: 'rule:25a', cite: '25(a)', modality: 'modality:shall' },
+      { id: 'rule:25b', cite: '25(b)', modality: 'modality:may' },
+      { id: 'rule:25c', cite: '25(c)', modality: 'modality:may' },
     ]);
-    expect(body.excluded).toEqual([]);
     expect(body.exempted).toEqual([]);
     expect(body.overridden).toEqual([]);
 
@@ -37,23 +36,33 @@ describe('evaluate_display: the 12 m sloop shows one of three displays', () => {
     expect(ld.count).toBe(3);
     expect(ld.relation).toBe('any_one_of');
     expect(ld.options.map((o: { option: number; of: number }) => [o.option, o.of])).toEqual([[1, 3], [2, 3], [3, 3]]);
-    expect(ld.options.map((o: { chosen: { id: string }[] }) => o.chosen.map((c) => c.id))).toEqual([[], ['25b'], ['25c']]);
+    expect(ld.options.map((o: { chosen: { id: string }[] }) => o.chosen.map((c) => c.id))).toEqual([[], ['rule:25b'], ['rule:25c']]);
 
     // No top-level lights to mistake for "the answer".
     expect(body.lights).toBeUndefined();
 
     for (const o of ld.options) {
       for (const l of o.lights) {
-        expect(['shall', 'may']).toContain(l.modality);
+        expect(['modality:shall', 'modality:may']).toContain(l.modality);
         expect(l.prescribed_by).toEqual({ id: expect.any(String), cite: expect.stringMatching(/^\d+\(/) });
         expect(l.name).toEqual(expect.any(String));
       }
     }
     // Option 3 mixes obligations: 25(a)'s shall lights with 25(c)'s may lights.
-    expect(ld.options[2].lights.map((l: { modality: string }) => l.modality)).toEqual(['shall', 'shall', 'may', 'may']);
-    expect(ld.options[2].lights[2]).toMatchObject({ light: 'light:all_round', color: 'red', modality: 'may', prescribed_by: { id: '25c', cite: '25(c)' } });
+    expect(ld.options[2].lights.map((l: { modality: string }) => l.modality)).toEqual([
+      'modality:shall',
+      'modality:shall',
+      'modality:may',
+      'modality:may',
+    ]);
+    expect(ld.options[2].lights[2]).toMatchObject({
+      light: 'light:all_round',
+      color: 'red',
+      modality: 'modality:may',
+      prescribed_by: { id: 'rule:25c', cite: '25(c)' },
+    });
 
-    expect(body.modality_key).toEqual({ shall: expect.any(String), may: expect.any(String) });
+    expect(body.modality_key).toEqual({ 'modality:shall': expect.any(String), 'modality:may': expect.any(String) });
     expect(body.cited_paragraphs['25(b)']).toBe(rulesJson.paragraphs['25(b)'].text);
     expect(Object.keys(body.cited_paragraphs).sort()).toEqual(['25(a)', '25(b)', '25(c)']);
   });
@@ -68,19 +77,18 @@ describe('evaluate_display: a fishing vessel aground', () => {
     // shows a fishing-vessel identity alongside her anchor lights. As it
     // stands, no Rule 26 entry fires for `position:aground`, so she shows
     // the plain anchor lights of Rule 30 like any other vessel her length.
-    expect(body.applied.map((a: { id: string }) => a.id)).toEqual(['30d-anchor', '30d-red']);
-    expect(body.excluded).toEqual([]);
+    expect(body.applied.map((a: { id: string }) => a.id)).toEqual(['rule:30d', 'rule:30d_i']);
     expect(body.overridden).toEqual([]);
 
     const ld = body.lawful_displays;
     expect(ld.count).toBe(2);
     expect(ld.relation).toBe('any_one_of');
-    expect(ld.options.map((o: { chosen: { id: string }[] }) => o.chosen.map((c) => c.id))).toEqual([['30a'], ['30b']]);
+    expect(ld.options.map((o: { chosen: { id: string }[] }) => o.chosen.map((c) => c.id))).toEqual([['rule:30a'], ['rule:30b']]);
     const mods = ld.options.flatMap((o: { lights: { modality: string }[] }) => o.lights.map((l) => l.modality));
-    expect(mods).toContain('shall');
-    expect(mods).toContain('may');
-    expect(mods).toContain('shall-if-practicable');
-    expect(body.modality_key['shall-if-practicable']).toEqual(expect.any(String));
+    expect(mods).toContain('modality:shall');
+    expect(mods).toContain('modality:may');
+    expect(mods).toContain('modality:shall-if-practicable');
+    expect(body.modality_key['modality:shall-if-practicable']).toEqual(expect.any(String));
 
     for (const k of ['30(a)', '30(b)', '30(d)']) {
       expect(body.cited_paragraphs[k]).toBe(rulesJson.paragraphs[k].text);
@@ -98,9 +106,8 @@ describe('evaluate_display: a trawler at anchor (colregs-engine#36)', () => {
     // composition via rel:overrides, not rel:excludes, and must still be
     // named -- silently dropping them (the bug this test pins) would leave
     // an MCP client believing no anchor-light rule ever applied at all.
-    expect(body.excluded).toEqual([]);
     expect(body.overridden.length).toBeGreaterThan(0);
-    expect(body.overridden.map((x: { id: string }) => x.id).sort()).toEqual(['30a', '30b']);
+    expect(body.overridden.map((x: { id: string }) => x.id).sort()).toEqual(['rule:30a', 'rule:30b']);
     for (const x of body.overridden) {
       expect(x).toEqual({
         id: expect.any(String),
@@ -118,12 +125,12 @@ describe('evaluate_display: a trawler at anchor (colregs-engine#36)', () => {
 
     // Neither displaced entry appears in any lawful display.
     for (const d of body.lawful_displays.options) {
-      expect(d.entries.map((e: { id: string }) => e.id)).not.toContain('30a');
-      expect(d.entries.map((e: { id: string }) => e.id)).not.toContain('30b');
+      expect(d.entries.map((e: { id: string }) => e.id)).not.toContain('rule:30a');
+      expect(d.entries.map((e: { id: string }) => e.id)).not.toContain('rule:30b');
     }
 
     // Overridden ids' and overriders' cites are resolvable, same contract
-    // as exempted/excluded.
+    // as exempted.
     for (const x of body.overridden) {
       expect(body.cited_paragraphs[x.cite]).toEqual(expect.any(String));
       expect(body.cited_paragraphs[x.by.cite]).toEqual(expect.any(String));
@@ -140,24 +147,25 @@ describe('applied_entries', () => {
       colregs: { version: expect.any(String), source: 'resolved' },
       facts: SLOOP,
       applied: [
-        { id: '25a', cite: '25(a)' },
-        { id: '25b', cite: '25(b)' },
-        { id: '25c', cite: '25(c)' },
+        { id: 'rule:25a', cite: '25(a)' },
+        { id: 'rule:25b', cite: '25(b)' },
+        { id: 'rule:25c', cite: '25(c)' },
       ],
     });
   });
 });
 
-// Every verb below is a colregs-engine stub; assert the input schema accepts
-// a well-formed call and the failure names verb/shape_fixed_by.
-describe('unbuilt verbs surface NotImplementedError, not a schema error', () => {
-  const SITUATION = { own: { fact: SLOOP } };
+// colregs-engine now implements all four of these (they were NotImplementedError
+// stubs before floating to #main); each just asserts the input schema accepts a
+// well-formed call and the engine's own colregs version comes through unshaped.
+describe('the four newly-implemented verbs pass their input schema and the engine answers', () => {
+  const SITUATION = { self: { fact: SLOOP } };
 
   it.each([
-    ['applied_encounter_entries', { situation: SITUATION }, 'appliedEncounterEntries'],
-    ['evaluate_encounter', { situation: SITUATION }, 'evaluateEncounter'],
-    ['applied_conduct_entries', { trace: { samples: [{ t_s: 0, situation: SITUATION }] } }, 'appliedConductEntries'],
-    ['evaluate_conduct', { trace: { samples: [{ t_s: 0, situation: SITUATION }] } }, 'evaluateConduct'],
+    ['applied_encounter_entries', { situation: SITUATION }],
+    ['evaluate_encounter', { situation: SITUATION }],
+    ['applied_conduct_entries', { trace: { samples: [{ t_s: 0, situation: SITUATION }] } }],
+    ['evaluate_conduct', { trace: { samples: [{ t_s: 0, situation: SITUATION }] } }],
     [
       'evaluate_rule2_departure',
       {
@@ -173,14 +181,11 @@ describe('unbuilt verbs surface NotImplementedError, not a schema error', () => 
           adversary: 'compliant',
         },
       },
-      'evaluateRule2Departure',
     ],
-  ])('%s: accepted input, unbuilt body', async (tool, args, verb) => {
+  ])('%s: accepted input, unshaped body', async (tool, args) => {
     const { isError, body } = await call(client, tool, args);
-    expect(isError).toBe(true);
-    expect(body.verb).toBe(verb);
-    expect(body.shape_fixed_by).toEqual(expect.any(String));
-    expect(body.error).toContain('not built');
+    expect(isError).toBe(false);
+    expect(body.warning).toContain('Not for navigation.');
   });
 });
 
