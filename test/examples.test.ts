@@ -36,7 +36,7 @@ describe('evaluate_display: the 12 m sloop shows one of three displays', () => {
     expect(ld.count).toBe(3);
     expect(ld.relation).toBe('any_one_of');
     expect(ld.options.map((o: { option: number; of: number }) => [o.option, o.of])).toEqual([[1, 3], [2, 3], [3, 3]]);
-    expect(ld.options.map((o: { chosen: { id: string }[] }) => o.chosen.map((c) => c.id))).toEqual([[], ['rule:25b'], ['rule:25c']]);
+    expect(ld.options.map((o: { chosen: { id: string }[] }) => o.chosen.map((c) => c.id))).toEqual([['rule:25b'], [], ['rule:25c']]);
 
     // No top-level lights to mistake for "the answer".
     expect(body.lights).toBeUndefined();
@@ -83,7 +83,7 @@ describe('evaluate_display: a fishing vessel aground', () => {
     const ld = body.lawful_displays;
     expect(ld.count).toBe(2);
     expect(ld.relation).toBe('any_one_of');
-    expect(ld.options.map((o: { chosen: { id: string }[] }) => o.chosen.map((c) => c.id))).toEqual([['rule:30a'], ['rule:30b']]);
+    expect(ld.options.map((o: { chosen: { id: string }[] }) => o.chosen.map((c) => c.id))).toEqual([['rule:30b'], ['rule:30a']]);
     const mods = ld.options.flatMap((o: { lights: { modality: string }[] }) => o.lights.map((l) => l.modality));
     expect(mods).toContain('modality:shall');
     expect(mods).toContain('modality:may');

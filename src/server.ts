@@ -49,7 +49,9 @@ const PLURAL_ANSWER =
   'combined masthead lantern a sailing vessel under 20 m may carry, against Rule 25(c), ' +
   'the all-round red over green she may add. When lawful_displays.count is greater than 1, ' +
   'every option is equally lawful, the correct report is all of them, and reporting any ' +
-  'one as "the" display for this vessel is wrong. Each option numbers itself "n of count", ' +
+  'one as "the" display for this vessel is wrong. Displays are listed in the order to ' +
+  'consider the rules in, most specific concession first, and the first is the one a ' +
+  'vessel of that description usually shows. Each option numbers itself "n of count", ' +
   'names the choice entries that distinguish it (chosen) and lists its lights with their ' +
   'own modality, so "shall" and "may" lights in one display are never merged.';
 
