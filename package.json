@@ -36,7 +36,9 @@
     "test": "vitest run",
     "build": "tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
-    "start": "node dist/cli.js"
+    "start": "node dist/cli.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.31.0",
@@ -46,6 +48,7 @@
   },
   "devDependencies": {
     "@types/node": "22.20.1",
+    "prettier": "3.6.2",
     "tsx": "4.23.13",
     "typescript": "^5.7.2",
     "vitest": "^5.0.0"
