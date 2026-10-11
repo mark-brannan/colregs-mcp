@@ -39,7 +39,7 @@
     "start": "node dist/cli.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/sdk": "^1.31.0",
     "colregs": "github:mark-brannan/colregs#main",
     "colregs-engine": "github:mark-brannan/colregs-engine#main",
     "zod": "^4.0.0"
