@@ -6,9 +6,9 @@ This is a preview, not yet published to npm, and maintained as a single
 moving line: only `main` gets fixes, and the tool surface will change
 without notice.
 
-| Version | Supported |
-| ------- | --------- |
-| `main` | yes |
+| Version         | Supported                   |
+| --------------- | --------------------------- |
+| `main`          | yes                         |
 | a pinned commit | no — update to `main` first |
 
 ## Reporting a vulnerability

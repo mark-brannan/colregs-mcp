@@ -32,7 +32,9 @@ beforeAll(async () => {
   execFileSync('npm', ['run', 'build'], { cwd: root, stdio: 'pipe' });
   expect(existsSync(cli)).toBe(true);
   client = new Client({ name: 'integration', version: '0' });
-  await client.connect(new StdioClientTransport({ command: process.execPath, args: [cli], stderr: 'pipe' }));
+  await client.connect(
+    new StdioClientTransport({ command: process.execPath, args: [cli], stderr: 'pipe' }),
+  );
 }, 60_000);
 
 afterAll(async () => {
@@ -41,7 +43,8 @@ afterAll(async () => {
 
 const callCli = async (name: string, args: Record<string, unknown>) => {
   const res = await client.callTool({ name, arguments: args });
-  const text = (res.content as { type: string; text: string }[]).find((c) => c.type === 'text')?.text ?? '';
+  const text =
+    (res.content as { type: string; text: string }[]).find((c) => c.type === 'text')?.text ?? '';
   return { isError: res.isError === true, body: JSON.parse(text) as Record<string, unknown> };
 };
 

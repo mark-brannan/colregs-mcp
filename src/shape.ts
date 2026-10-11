@@ -93,7 +93,8 @@ function shapeLight(l: DisplayLight, modalities: Record<string, string>): Shaped
 export function shapeEvaluation(facts: FactRecord, ev: DisplayEvaluation): EvaluateDisplayResponse {
   const modal = (id: string): CitedModal => ({ ...cited(id), modality: ev.modalities[id] });
   const count = ev.displays.length;
-  const relation: DisplayRelation = count === 0 ? 'none' : count === 1 ? 'exactly_one' : 'any_one_of';
+  const relation: DisplayRelation =
+    count === 0 ? 'none' : count === 1 ? 'exactly_one' : 'any_one_of';
 
   const options: DisplayOption[] = ev.displays.map((d, i) => ({
     option: i + 1,
@@ -116,16 +117,18 @@ export function shapeEvaluation(facts: FactRecord, ev: DisplayEvaluation): Evalu
     cites.add(citeOf(x.id));
     cites.add(citeOf(x.by));
   }
-  for (const o of options) for (const l of o.lights) {
-    cites.add(l.prescribed_by.cite);
-    if (l.via) cites.add(l.via.cite);
-  }
+  for (const o of options)
+    for (const l of o.lights) {
+      cites.add(l.prescribed_by.cite);
+      if (l.via) cites.add(l.via.cite);
+    }
   for (const a of additions) cites.add(a.cite);
 
   const usedModalities = new Set<string>(Object.values(ev.modalities));
   for (const o of options) for (const l of o.lights) usedModalities.add(l.modality);
   const modality_key: Record<string, string> = {};
-  for (const m of Object.keys(MODALITY_KEY)) if (usedModalities.has(m)) modality_key[m] = MODALITY_KEY[m];
+  for (const m of Object.keys(MODALITY_KEY))
+    if (usedModalities.has(m)) modality_key[m] = MODALITY_KEY[m];
 
   return {
     colregs: ev.colregs,
@@ -150,5 +153,9 @@ export function shapeApplied(facts: FactRecord, ids: string[]): AppliedEntriesRe
   // The server never passes opts.data to the engine, so the data is the
   // engine's own resolved release by construction; the version is checked
   // against this package's copy at startup (server.ts).
-  return { colregs: { version: COLREGS_VERSION, source: 'resolved' }, facts, applied: ids.map(cited) };
+  return {
+    colregs: { version: COLREGS_VERSION, source: 'resolved' },
+    facts,
+    applied: ids.map(cited),
+  };
 }

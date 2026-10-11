@@ -89,7 +89,12 @@ export const rules: RulesData = {
   paragraphs: Object.fromEntries(
     Object.entries(rulesText.paragraphs).map(([path, t]) => [
       path,
-      { path, rule: rulesSkeleton.paragraphs[path].rule, jurisdiction: rulesSkeleton.paragraphs[path].jurisdiction, ...t },
+      {
+        path,
+        rule: rulesSkeleton.paragraphs[path].rule,
+        jurisdiction: rulesSkeleton.paragraphs[path].jurisdiction,
+        ...t,
+      },
     ]),
   ),
 };
@@ -99,9 +104,8 @@ const applicability = require('colregs/data/applicability.json') as Applicabilit
 
 /** The colregs release this package resolved for rules/lights/facts. The
  * engine reports its own; server.ts refuses to start if the two differ. */
-export const COLREGS_VERSION: string = (
-  require('colregs/package.json') as { version: string }
-).version;
+export const COLREGS_VERSION: string = (require('colregs/package.json') as { version: string })
+  .version;
 
 /** Verbatim modality glossary from applicability.json. */
 export const MODALITY_KEY: Record<string, string> = applicability.modalities;

@@ -38,17 +38,17 @@ then command `node`, argument `/absolute/path/to/colregs-mcp/dist/cli.js`.
 
 ## Tools
 
-| tool | input | returns |
-|---|---|---|
-| `evaluate_display` | `facts` | every lawful display, cited and with modality per light |
-| `applied_entries` | `facts` | the applicability entries that hold, as `{id, cite}` |
-| `rule_text` | `cite` | verbatim paragraph text from colregs `data/rules.json` |
-| `light` | `id` | a light's definition from colregs `data/lights.json` |
-| `applied_encounter_entries` | `situation` | scope/classification/precedence entries that hold — **not built**, see below |
-| `evaluate_encounter` | `situation` | encounter type, risk of collision, roles — **not built**, see below |
-| `applied_conduct_entries` | `trace` | conduct entries that attached over a window — **not built**, see below |
-| `evaluate_conduct` | `trace` | kept/breached/pending verdicts, phase changes — **not built**, see below |
-| `evaluate_rule2_departure` | `situation`, `model` | region membership and advisories against a solved grid — **not built**, see below |
+| tool                        | input                | returns                                                                           |
+| --------------------------- | -------------------- | --------------------------------------------------------------------------------- |
+| `evaluate_display`          | `facts`              | every lawful display, cited and with modality per light                           |
+| `applied_entries`           | `facts`              | the applicability entries that hold, as `{id, cite}`                              |
+| `rule_text`                 | `cite`               | verbatim paragraph text from colregs `data/rules.json`                            |
+| `light`                     | `id`                 | a light's definition from colregs `data/lights.json`                              |
+| `applied_encounter_entries` | `situation`          | scope/classification/precedence entries that hold — **not built**, see below      |
+| `evaluate_encounter`        | `situation`          | encounter type, risk of collision, roles — **not built**, see below               |
+| `applied_conduct_entries`   | `trace`              | conduct entries that attached over a window — **not built**, see below            |
+| `evaluate_conduct`          | `trace`              | kept/breached/pending verdicts, phase changes — **not built**, see below          |
+| `evaluate_rule2_departure`  | `situation`, `model` | region membership and advisories against a solved grid — **not built**, see below |
 
 The last five call colregs-engine verbs it has named but not built yet; each errors today, naming the verb and the ADR that fixes its shape.
 
@@ -67,8 +67,14 @@ The same two vessels as colregs-engine's README.
 ### A 12 m sloop, under way: three displays
 
 ```json
-{ "facts": { "fact:propulsion": "propulsion:sail", "fact:activity": "activity:none",
-             "fact:position": "position:underway", "fact:length_m": 11.6 } }
+{
+  "facts": {
+    "fact:propulsion": "propulsion:sail",
+    "fact:activity": "activity:none",
+    "fact:position": "position:underway",
+    "fact:length_m": 11.6
+  }
+}
 ```
 
 Trimmed response:
@@ -81,25 +87,91 @@ Trimmed response:
     { "id": "rule:25b", "cite": "25(b)", "modality": "modality:may" },
     { "id": "rule:25c", "cite": "25(c)", "modality": "modality:may" }
   ],
-  "exempted": [], "overridden": [],
+  "exempted": [],
+  "overridden": [],
   "lawful_displays": {
     "count": 3,
     "relation": "any_one_of",
     "options": [
-      { "option": 1, "of": 3, "chosen": [],
+      {
+        "option": 1,
+        "of": 3,
+        "chosen": [],
         "lights": [
-          { "light": "light:sidelights", "name": "sidelights", "modality": "modality:shall", "prescribed_by": { "id": "rule:25a", "cite": "25(a)" } },
-          { "light": "light:sternlight", "name": "sternlight", "modality": "modality:shall", "prescribed_by": { "id": "rule:25a", "cite": "25(a)" } } ] },
-      { "option": 2, "of": 3, "chosen": [ { "id": "rule:25b", "cite": "25(b)", "modality": "modality:may" } ],
+          {
+            "light": "light:sidelights",
+            "name": "sidelights",
+            "modality": "modality:shall",
+            "prescribed_by": { "id": "rule:25a", "cite": "25(a)" }
+          },
+          {
+            "light": "light:sternlight",
+            "name": "sternlight",
+            "modality": "modality:shall",
+            "prescribed_by": { "id": "rule:25a", "cite": "25(a)" }
+          }
+        ]
+      },
+      {
+        "option": 2,
+        "of": 3,
+        "chosen": [{ "id": "rule:25b", "cite": "25(b)", "modality": "modality:may" }],
         "lights": [
-          { "light": "light:sidelights", "name": "sidelights", "combined": true, "position": "at or near the top of the mast", "modality": "modality:may", "prescribed_by": { "id": "rule:25b", "cite": "25(b)" } },
-          { "light": "light:sternlight", "name": "sternlight", "combined": true, "position": "at or near the top of the mast", "modality": "modality:may", "prescribed_by": { "id": "rule:25b", "cite": "25(b)" } } ] },
-      { "option": 3, "of": 3, "chosen": [ { "id": "rule:25c", "cite": "25(c)", "modality": "modality:may" } ],
+          {
+            "light": "light:sidelights",
+            "name": "sidelights",
+            "combined": true,
+            "position": "at or near the top of the mast",
+            "modality": "modality:may",
+            "prescribed_by": { "id": "rule:25b", "cite": "25(b)" }
+          },
+          {
+            "light": "light:sternlight",
+            "name": "sternlight",
+            "combined": true,
+            "position": "at or near the top of the mast",
+            "modality": "modality:may",
+            "prescribed_by": { "id": "rule:25b", "cite": "25(b)" }
+          }
+        ]
+      },
+      {
+        "option": 3,
+        "of": 3,
+        "chosen": [{ "id": "rule:25c", "cite": "25(c)", "modality": "modality:may" }],
         "lights": [
-          { "light": "light:sidelights", "name": "sidelights", "modality": "modality:shall", "prescribed_by": { "id": "rule:25a", "cite": "25(a)" } },
-          { "light": "light:sternlight", "name": "sternlight", "modality": "modality:shall", "prescribed_by": { "id": "rule:25a", "cite": "25(a)" } },
-          { "light": "light:all_round", "name": "all-round light", "color": "red", "count": 1, "position": "upper, at or near the top of the mast", "modality": "modality:may", "prescribed_by": { "id": "rule:25c", "cite": "25(c)" } },
-          { "light": "light:all_round", "name": "all-round light", "color": "green", "count": 1, "position": "lower, at or near the top of the mast", "modality": "modality:may", "prescribed_by": { "id": "rule:25c", "cite": "25(c)" } } ] }
+          {
+            "light": "light:sidelights",
+            "name": "sidelights",
+            "modality": "modality:shall",
+            "prescribed_by": { "id": "rule:25a", "cite": "25(a)" }
+          },
+          {
+            "light": "light:sternlight",
+            "name": "sternlight",
+            "modality": "modality:shall",
+            "prescribed_by": { "id": "rule:25a", "cite": "25(a)" }
+          },
+          {
+            "light": "light:all_round",
+            "name": "all-round light",
+            "color": "red",
+            "count": 1,
+            "position": "upper, at or near the top of the mast",
+            "modality": "modality:may",
+            "prescribed_by": { "id": "rule:25c", "cite": "25(c)" }
+          },
+          {
+            "light": "light:all_round",
+            "name": "all-round light",
+            "color": "green",
+            "count": 1,
+            "position": "lower, at or near the top of the mast",
+            "modality": "modality:may",
+            "prescribed_by": { "id": "rule:25c", "cite": "25(c)" }
+          }
+        ]
+      }
     ]
   },
   "optional_additions": { "relation": "any_subset_of", "items": [] },
@@ -122,8 +194,14 @@ against 25(c). The Rules leave that to the skipper, and so does this.
 ### A fishing vessel aground: two lawful displays, no exclusion
 
 ```json
-{ "facts": { "fact:propulsion": "propulsion:power", "fact:activity": "activity:fishing",
-             "fact:position": "position:aground", "fact:length_m": 30 } }
+{
+  "facts": {
+    "fact:propulsion": "propulsion:power",
+    "fact:activity": "activity:fishing",
+    "fact:position": "position:aground",
+    "fact:length_m": 30
+  }
+}
 ```
 
 Trimmed response:
@@ -135,20 +213,73 @@ Trimmed response:
     { "id": "rule:30d_i", "cite": "30(d)(i)", "modality": "modality:shall-if-practicable" }
   ],
   "lawful_displays": {
-    "count": 2, "relation": "any_one_of",
+    "count": 2,
+    "relation": "any_one_of",
     "options": [
-      { "option": 1, "of": 2, "chosen": [ { "id": "rule:30a", "cite": "30(a)", "modality": "modality:shall" } ],
+      {
+        "option": 1,
+        "of": 2,
+        "chosen": [{ "id": "rule:30a", "cite": "30(a)", "modality": "modality:shall" }],
         "lights": [
-          { "light": "light:all_round", "color": "red",   "count": 2, "arrangement": "vertical", "modality": "modality:shall-if-practicable", "prescribed_by": { "id": "rule:30d_i", "cite": "30(d)(i)" } },
-          { "light": "light:all_round", "color": "white", "count": 1, "position": "in the fore part", "modality": "modality:shall", "prescribed_by": { "id": "rule:30a", "cite": "30(a)" }, "via": { "id": "rule:30d", "cite": "30(d)" } },
-          { "light": "light:all_round", "color": "white", "count": 1, "position": "at or near the stern, at a lower level than the fore one", "modality": "modality:shall", "prescribed_by": { "id": "rule:30a", "cite": "30(a)" }, "via": { "id": "rule:30d", "cite": "30(d)" } } ] },
-      { "option": 2, "of": 2, "chosen": [ { "id": "rule:30b", "cite": "30(b)", "modality": "modality:may" } ],
+          {
+            "light": "light:all_round",
+            "color": "red",
+            "count": 2,
+            "arrangement": "vertical",
+            "modality": "modality:shall-if-practicable",
+            "prescribed_by": { "id": "rule:30d_i", "cite": "30(d)(i)" }
+          },
+          {
+            "light": "light:all_round",
+            "color": "white",
+            "count": 1,
+            "position": "in the fore part",
+            "modality": "modality:shall",
+            "prescribed_by": { "id": "rule:30a", "cite": "30(a)" },
+            "via": { "id": "rule:30d", "cite": "30(d)" }
+          },
+          {
+            "light": "light:all_round",
+            "color": "white",
+            "count": 1,
+            "position": "at or near the stern, at a lower level than the fore one",
+            "modality": "modality:shall",
+            "prescribed_by": { "id": "rule:30a", "cite": "30(a)" },
+            "via": { "id": "rule:30d", "cite": "30(d)" }
+          }
+        ]
+      },
+      {
+        "option": 2,
+        "of": 2,
+        "chosen": [{ "id": "rule:30b", "cite": "30(b)", "modality": "modality:may" }],
         "lights": [
-          { "light": "light:all_round", "color": "red",   "count": 2, "arrangement": "vertical", "modality": "modality:shall-if-practicable", "prescribed_by": { "id": "rule:30d_i", "cite": "30(d)(i)" } },
-          { "light": "light:all_round", "color": "white", "count": 1, "position": "where it can best be seen", "modality": "modality:may", "prescribed_by": { "id": "rule:30b", "cite": "30(b)" }, "via": { "id": "rule:30d", "cite": "30(d)" } } ] }
+          {
+            "light": "light:all_round",
+            "color": "red",
+            "count": 2,
+            "arrangement": "vertical",
+            "modality": "modality:shall-if-practicable",
+            "prescribed_by": { "id": "rule:30d_i", "cite": "30(d)(i)" }
+          },
+          {
+            "light": "light:all_round",
+            "color": "white",
+            "count": 1,
+            "position": "where it can best be seen",
+            "modality": "modality:may",
+            "prescribed_by": { "id": "rule:30b", "cite": "30(b)" },
+            "via": { "id": "rule:30d", "cite": "30(d)" }
+          }
+        ]
+      }
     ]
   },
-  "modality_key": { "modality:shall": "mandatory", "modality:may": "permitted alternative", "modality:shall-if-practicable": "mandatory where practicable, with a stated fallback" },
+  "modality_key": {
+    "modality:shall": "mandatory",
+    "modality:may": "permitted alternative",
+    "modality:shall-if-practicable": "mandatory where practicable, with a stated fallback"
+  },
   "cited_paragraphs": { "30(a)": "…", "30(b)": "…", "30(d)": "…" }
 }
 ```

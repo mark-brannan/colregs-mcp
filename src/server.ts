@@ -91,10 +91,18 @@ function factRecordSchema() {
     );
   }
   for (const [key, f] of Object.entries(factsData.modifiers)) {
-    shape[key] = withNote(z.boolean().optional(), undefined, [f.refines && `Refines ${f.refines}.`, f.note].filter(Boolean).join(' '));
+    shape[key] = withNote(
+      z.boolean().optional(),
+      undefined,
+      [f.refines && `Refines ${f.refines}.`, f.note].filter(Boolean).join(' '),
+    );
   }
   for (const [key, f] of Object.entries(factsData.numerics)) {
-    shape[key] = withNote(z.number().optional(), f.cite, [f.unit && `Unit: ${f.unit}.`, f.note].filter(Boolean).join(' '));
+    shape[key] = withNote(
+      z.number().optional(),
+      f.cite,
+      [f.unit && `Unit: ${f.unit}.`, f.note].filter(Boolean).join(' '),
+    );
   }
   for (const [key, f] of Object.entries(factsData.booleans)) {
     shape[key] = withNote(z.boolean().optional(), f.cite, f.note);
@@ -124,9 +132,17 @@ const namespacedRecord = (prefix: string, note: string) =>
 function subjectSchema() {
   return z
     .object({
-      fact: z.lazy(() => factRecordSchema()).describe('A fact record for this vessel; same vocabulary as evaluate_display.'),
-      kin: namespacedRecord('kin', 'Absolute kinematic state (position, heading, speed, dynamics).'),
-      geo: namespacedRecord('geo', "Geometry measured from this vessel's own frame (relative bearing, windward)."),
+      fact: z
+        .lazy(() => factRecordSchema())
+        .describe('A fact record for this vessel; same vocabulary as evaluate_display.'),
+      kin: namespacedRecord(
+        'kin',
+        'Absolute kinematic state (position, heading, speed, dynamics).',
+      ),
+      geo: namespacedRecord(
+        'geo',
+        "Geometry measured from this vessel's own frame (relative bearing, windward).",
+      ),
       hist: namespacedRecord('hist', 'What has already been true of this encounter and latches.'),
     })
     .strict();
@@ -136,11 +152,19 @@ function situationSchema() {
   return z
     .object({
       self: subjectSchema().describe('The vessel whose obligations are being evaluated.'),
-      other: subjectSchema().optional().describe('The other vessel, when this is a two-vessel encounter.'),
+      other: subjectSchema()
+        .optional()
+        .describe('The other vessel, when this is a two-vessel encounter.'),
       pair: z
         .object({
-          geo: namespacedRecord('geo', 'Geometry symmetric between the two vessels (range, CPA, TCPA, in_sight).'),
-          env: namespacedRecord('env', 'Where the encounter is happening, not a property of either vessel.'),
+          geo: namespacedRecord(
+            'geo',
+            'Geometry symmetric between the two vessels (range, CPA, TCPA, in_sight).',
+          ),
+          env: namespacedRecord(
+            'env',
+            'Where the encounter is happening, not a property of either vessel.',
+          ),
         })
         .strict()
         .optional(),
@@ -149,7 +173,9 @@ function situationSchema() {
 }
 
 const SolverParametersSchema = z.object({
-  dynamics: z.array(z.string()).describe('Vessel dynamics classes the grid covers, e.g. "dynamics:cargo".'),
+  dynamics: z
+    .array(z.string())
+    .describe('Vessel dynamics classes the grid covers, e.g. "dynamics:cargo".'),
   horizon_s: z.number(),
   cadence_s: z.number(),
   separation_m: z.number(),
@@ -165,11 +191,7 @@ const Rule2DepartureModelSchema = SolverParametersSchema.extend({
 const TraceSchema = z
   .object({
     samples: z
-      .array(
-        z
-          .object({ t_s: z.number(), situation: situationSchema() })
-          .strict(),
-      )
+      .array(z.object({ t_s: z.number(), situation: situationSchema() }).strict())
       .min(1)
       .describe('Strictly increasing t_s, the same two vessels throughout.'),
   })
@@ -193,7 +215,10 @@ const json = (value: unknown): CallToolResult => {
 const failure = (message: string, detail?: Record<string, unknown>): CallToolResult => ({
   isError: true,
   content: [
-    { type: 'text', text: JSON.stringify({ warning: RESPONSE_WARNING, error: message, ...detail }, null, 2) },
+    {
+      type: 'text',
+      text: JSON.stringify({ warning: RESPONSE_WARNING, error: message, ...detail }, null, 2),
+    },
   ],
 });
 
@@ -210,7 +235,10 @@ function withEngine<T>(fn: () => T): CallToolResult {
 
 export function createServer(): McpServer {
   CHECK_VERSIONS();
-  const server = new McpServer({ name: 'colregs-mcp', version: VERSION }, { instructions: INSTRUCTIONS });
+  const server = new McpServer(
+    { name: 'colregs-mcp', version: VERSION },
+    { instructions: INSTRUCTIONS },
+  );
   const FactsSchema = factRecordSchema();
 
   server.registerTool(
@@ -251,7 +279,9 @@ export function createServer(): McpServer {
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     ({ facts }) =>
-      withEngine(() => shapeApplied(facts as FactRecord, appliedDisplayEntries(facts as FactRecord))),
+      withEngine(() =>
+        shapeApplied(facts as FactRecord, appliedDisplayEntries(facts as FactRecord)),
+      ),
   );
 
   server.registerTool(
@@ -266,7 +296,11 @@ export function createServer(): McpServer {
         'transcribed from the USCG amalgamated Navigation Rules; the response names ' +
         'the source and retrieval date. ' +
         NOT_FOR_NAVIGATION,
-      inputSchema: { cite: z.string().describe('Paragraph path, rule number or range, e.g. "25(b)", "25", "24(a)(ii)-(iv)".') },
+      inputSchema: {
+        cite: z
+          .string()
+          .describe('Paragraph path, rule number or range, e.g. "25(b)", "25", "24(a)(ii)-(iv)".'),
+      },
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     ({ cite }) => {
@@ -284,7 +318,13 @@ export function createServer(): McpServer {
         source: { source: rules.source, source_url: rules.source_url, retrieved: rules.retrieved },
         paragraphs: keys.map((k) => {
           const p = rules.paragraphs[k];
-          return { cite: k, rule: p.rule, rule_title: p.rule_title, jurisdiction: p.jurisdiction, text: p.text };
+          return {
+            cite: k,
+            rule: p.rule,
+            rule_title: p.rule_title,
+            jurisdiction: p.jurisdiction,
+            text: p.text,
+          };
         }),
       });
     },
@@ -397,7 +437,9 @@ export function createServer(): McpServer {
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     ({ situation, model }) =>
-      withEngine(() => evaluateRule2Departure(situation as Situation, model as Rule2DepartureModel)),
+      withEngine(() =>
+        evaluateRule2Departure(situation as Situation, model as Rule2DepartureModel),
+      ),
   );
 
   return server;
