@@ -159,6 +159,11 @@ Rule 26 has no jurisdiction over a vessel aground, so Rule 30(d) alone
 governs and she shows the same anchor lights as any other vessel her
 length, plus 30(d)'s red lights if practicable.
 
+**Side by side.** [docs/demo.md](docs/demo.md) puts the sloop's question to
+the same model with and without this server and shows both answers as
+captured, with the prompt, commands, model id and date, so you can run it
+yourself.
+
 ## Response shape
 
 Three properties, each tested in `test/examples.test.ts`:
