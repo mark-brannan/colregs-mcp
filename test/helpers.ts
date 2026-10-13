@@ -15,8 +15,13 @@ export async function connect(): Promise<Client> {
 
 export async function call(client: Client, name: string, args: Record<string, unknown>) {
   const res = await client.callTool({ name, arguments: args });
-  const text = (res.content as { type: string; text: string }[]).find((c) => c.type === 'text')?.text ?? '';
-  return { isError: res.isError === true, body: JSON.parse(text), structured: res.structuredContent };
+  const text =
+    (res.content as { type: string; text: string }[]).find((c) => c.type === 'text')?.text ?? '';
+  return {
+    isError: res.isError === true,
+    body: JSON.parse(text),
+    structured: res.structuredContent,
+  };
 }
 
 export const SLOOP = {

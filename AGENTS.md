@@ -20,7 +20,7 @@ paragraph weighing whose client config might break. Nobody's config breaks.
 same day, even if it throws or returns an inconclusive status. Withholding a tool
 because its behaviour isn't settled is the failure mode, not the caution.
 
-**Where the rigour goes instead.** What the tools *say* — the advisory envelope,
+**Where the rigour goes instead.** What the tools _say_ — the advisory envelope,
 its statuses and its provenance — because a wrong answer about lights at sea is
 the only failure here that matters. That rigour is about correctness, never about
 hedging: no disclaimers, no liability language, no "may change" in a tool result.

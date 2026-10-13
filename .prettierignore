@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+package-lock.json
+CHANGELOG.md
+.release-please-manifest.json
+# CI workflows are not reformatted by this tool
+.github

@@ -11,7 +11,7 @@ Merging release-please's release PR tags the commit, and
 npm, the official MCP registry, then `mcpb pack`, with the `.mcpb` attached to
 the GitHub Release as `colregs-mcp.mcpb`.
 
-The manifest is schema-validated *before* `npm publish`, because everything
+The manifest is schema-validated _before_ `npm publish`, because everything
 after that line is irreversible. Nothing below needs doing until that workflow
 is green.
 
