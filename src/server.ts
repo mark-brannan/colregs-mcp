@@ -4,16 +4,12 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import {
-  appliedConductEntries,
-  appliedDisplayEntries,
-  appliedEncounterEntries,
   evaluateConduct,
   evaluateDisplay,
   evaluateEncounter,
-  evaluateRule2Departure,
-  NotImplementedError,
+  evaluateDeparture,
 } from 'colregs-engine';
-import type { FactRecord, Rule2DepartureModel, Situation, Trace } from 'colregs-engine';
+import type { FactRecord, DepartureModel, Situation, Trace } from 'colregs-engine';
 import { z } from 'zod';
 
 import { COLREGS_VERSION, facts as factsData, lights, paragraphKeys, rules } from './data.js';
@@ -226,9 +222,6 @@ function withEngine<T>(fn: () => T): CallToolResult {
   try {
     return json(fn());
   } catch (e) {
-    if (e instanceof NotImplementedError) {
-      return failure(e.message, { verb: e.verb, missing: e.missing });
-    }
     return failure(e instanceof Error ? e.message : String(e));
   }
 }
@@ -280,7 +273,7 @@ export function createServer(): McpServer {
     },
     ({ facts }) =>
       withEngine(() =>
-        shapeApplied(facts as FactRecord, appliedDisplayEntries(facts as FactRecord)),
+        shapeApplied(facts as FactRecord, evaluateDisplay(facts as FactRecord).applied),
       ),
   );
 
@@ -370,7 +363,7 @@ export function createServer(): McpServer {
       inputSchema: { situation: situationSchema() },
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
-    ({ situation }) => withEngine(() => appliedEncounterEntries(situation as Situation)),
+    ({ situation }) => withEngine(() => evaluateEncounter(situation as Situation).applied),
   );
 
   server.registerTool(
@@ -403,7 +396,7 @@ export function createServer(): McpServer {
       inputSchema: { trace: TraceSchema },
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
-    ({ trace }) => withEngine(() => appliedConductEntries(trace as Trace)),
+    ({ trace }) => withEngine(() => evaluateConduct(trace as Trace).applied),
   );
 
   server.registerTool(
@@ -437,9 +430,7 @@ export function createServer(): McpServer {
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     ({ situation, model }) =>
-      withEngine(() =>
-        evaluateRule2Departure(situation as Situation, model as Rule2DepartureModel),
-      ),
+      withEngine(() => evaluateDeparture(situation as Situation, model as DepartureModel)),
   );
 
   return server;
