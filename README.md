@@ -329,9 +329,11 @@ belong somewhere else. This is that somewhere.
 
 ## Dependencies and stability
 
-- `colregs-engine` and `colregs` are both published npm packages, pinned
-  with caret ranges. The engine and the data package must resolve the same
-  release; a split install fails at startup with a message saying so.
+- `colregs-engine` and `colregs` are installed from GitHub `main`
+  (`github:mark-brannan/colregs-engine#main`, `github:mark-brannan/colregs#main`),
+  not from npm releases; the lockfile pins the commit. The engine and the
+  data package must resolve the same release; a split install fails at
+  startup with a message saying so.
 - Version 0.0.x. Tool names, argument names and response fields may all
   change. The three response properties above are the commitment; nothing
   else is.
