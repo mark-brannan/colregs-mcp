@@ -369,7 +369,7 @@ export function createServer(): McpServer {
   server.registerTool(
     'evaluate_circumstances',
     {
-      title: 'Evaluate an encounter',
+      title: 'Evaluate the circumstances',
       description:
         'What kind of encounter two vessels are in (head-on, crossing, overtaking), whether ' +
         'risk of collision is asserted and by which entries, and each vessel’s roles ' +
@@ -402,7 +402,7 @@ export function createServer(): McpServer {
   server.registerTool(
     'evaluate_compliance',
     {
-      title: 'Evaluate conduct over a trace',
+      title: 'Evaluate compliance over a trace',
       description:
         'One verdict (kept, breached, pending) per applied conduct entry per vessel it ' +
         'attached to, plus Rule 13(d)/17 phase changes, over a trace of situation samples. ' +
