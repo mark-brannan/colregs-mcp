@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.0.3](https://github.com/mark-brannan/colregs-mcp/compare/v0.0.2...v0.0.3) (2026-10-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* follow colregs-engine #166 renames; evaluate_circumstances and evaluate_compliance ([#41](https://github.com/mark-brannan/colregs-mcp/issues/41))
+
+### Changed
+
+* follow colregs-engine [#166](https://github.com/mark-brannan/colregs-mcp/issues/166) renames; evaluate_circumstances and evaluate_compliance ([#41](https://github.com/mark-brannan/colregs-mcp/issues/41)) ([57db330](https://github.com/mark-brannan/colregs-mcp/commit/57db330f8bfd0a8560d9e3ce7cf212199fd22b99))
+
 ## [0.0.2](https://github.com/mark-brannan/colregs-mcp/compare/v0.0.1...v0.0.2) (2026-10-16)
 
 
