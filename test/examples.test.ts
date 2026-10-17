@@ -185,9 +185,9 @@ describe('the four newly-implemented verbs pass their input schema and the engin
 
   it.each([
     ['applied_encounter_entries', { situation: SITUATION }],
-    ['evaluate_encounter', { situation: SITUATION }],
+    ['evaluate_circumstances', { situation: SITUATION }],
     ['applied_conduct_entries', { trace: { samples: [{ t_s: 0, situation: SITUATION }] } }],
-    ['evaluate_conduct', { trace: { samples: [{ t_s: 0, situation: SITUATION }] } }],
+    ['evaluate_compliance', { trace: { samples: [{ t_s: 0, situation: SITUATION }] } }],
     [
       'evaluate_rule2_departure',
       {
@@ -323,9 +323,9 @@ describe('tool descriptions', () => {
       'applied_conduct_entries',
       'applied_encounter_entries',
       'applied_entries',
-      'evaluate_conduct',
+      'evaluate_compliance',
       'evaluate_display',
-      'evaluate_encounter',
+      'evaluate_circumstances',
       'evaluate_rule2_departure',
       'light',
       'rule_text',

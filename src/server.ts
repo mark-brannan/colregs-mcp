@@ -4,9 +4,9 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import {
-  evaluateConduct,
+  evaluateCompliance,
   evaluateDisplay,
-  evaluateEncounter,
+  evaluateCircumstances,
   evaluateDeparture,
 } from 'colregs-engine';
 import type { FactRecord, DepartureModel, Situation, Trace } from 'colregs-engine';
@@ -125,7 +125,7 @@ const namespacedRecord = (prefix: string, note: string) =>
     .optional()
     .describe(`Keys namespaced \`${prefix}:*\` per colregs-engine's Situation type. ${note}`);
 
-function subjectSchema() {
+function vesselSchema() {
   return z
     .object({
       fact: z
@@ -147,8 +147,8 @@ function subjectSchema() {
 function situationSchema() {
   return z
     .object({
-      self: subjectSchema().describe('The vessel whose obligations are being evaluated.'),
-      other: subjectSchema()
+      self: vesselSchema().describe('The vessel whose obligations are being evaluated.'),
+      other: vesselSchema()
         .optional()
         .describe('The other vessel, when this is a two-vessel encounter.'),
       pair: z
@@ -363,11 +363,11 @@ export function createServer(): McpServer {
       inputSchema: { situation: situationSchema() },
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
-    ({ situation }) => withEngine(() => evaluateEncounter(situation as Situation).applied),
+    ({ situation }) => withEngine(() => evaluateCircumstances(situation as Situation).applied),
   );
 
   server.registerTool(
-    'evaluate_encounter',
+    'evaluate_circumstances',
     {
       title: 'Evaluate an encounter',
       description:
@@ -380,7 +380,7 @@ export function createServer(): McpServer {
       inputSchema: { situation: situationSchema() },
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
-    ({ situation }) => withEngine(() => evaluateEncounter(situation as Situation)),
+    ({ situation }) => withEngine(() => evaluateCircumstances(situation as Situation)),
   );
 
   server.registerTool(
@@ -396,15 +396,15 @@ export function createServer(): McpServer {
       inputSchema: { trace: TraceSchema },
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
-    ({ trace }) => withEngine(() => evaluateConduct(trace as Trace).applied),
+    ({ trace }) => withEngine(() => evaluateCompliance(trace as Trace).applied),
   );
 
   server.registerTool(
-    'evaluate_conduct',
+    'evaluate_compliance',
     {
       title: 'Evaluate conduct over a trace',
       description:
-        'One verdict (kept, breached, pending) per applied conduct entry per subject it ' +
+        'One verdict (kept, breached, pending) per applied conduct entry per vessel it ' +
         'attached to, plus Rule 13(d)/17 phase changes, over a trace of situation samples. ' +
         UNSHAPED +
         ' ' +
@@ -412,7 +412,7 @@ export function createServer(): McpServer {
       inputSchema: { trace: TraceSchema },
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
-    ({ trace }) => withEngine(() => evaluateConduct(trace as Trace)),
+    ({ trace }) => withEngine(() => evaluateCompliance(trace as Trace)),
   );
 
   server.registerTool(

@@ -45,9 +45,9 @@ then command `node`, argument `/absolute/path/to/colregs-mcp/dist/cli.js`.
 | `rule_text`                 | `cite`               | verbatim paragraph text from colregs `data/rules.json`  |
 | `light`                     | `id`                 | a light's definition from colregs `data/lights.json`    |
 | `applied_encounter_entries` | `situation`          | scope/classification/precedence entries that hold       |
-| `evaluate_encounter`        | `situation`          | encounter type, risk of collision, roles                |
+| `evaluate_circumstances`    | `situation`          | encounter type, risk of collision, roles                |
 | `applied_conduct_entries`   | `trace`              | conduct entries that attached over a window             |
-| `evaluate_conduct`          | `trace`              | kept/breached/pending verdicts, phase changes           |
+| `evaluate_compliance`       | `trace`              | kept/breached/pending verdicts, phase changes           |
 | `evaluate_rule2_departure`  | `situation`, `model` | region membership and advisories against a solved grid  |
 
 `facts` is a colregs fact record: the keys and values of colregs'
