@@ -6,28 +6,27 @@
 > The tool surface will change without notice.
 
 An [MCP](https://modelcontextprotocol.io) server that answers questions
-under the COLREGS and hands back the answer in a form a language model
-cannot quietly simplify: every lawful answer, every entry with its
-paragraph cite, and the verbatim rule text those cites resolve to. The
-rules are evaluated by
-[colregs-engine](https://github.com/mark-brannan/colregs-engine).
-
-It has no semantics of its own. The engine decides; this package only
-decides how the answer is written down. That is the whole job, and the
-[response shape](#response-shape) section is the part worth reading.
+under the COLREGS. Every answer carries its paragraph cites and the verbatim
+rule text those cites resolve to, so a language model cannot quietly
+simplify it. The rules are evaluated by
+[colregs-engine](https://github.com/mark-brannan/colregs-engine); this
+package only decides how the answer is written down.
 
 ## Try it
 
-Register the stdio server with your client. Claude Code:
+**Claude Code:**
 
 ```bash
 claude mcp add colregs -- npx -y colregs-mcp
 ```
 
-Any other MCP client: command `npx`, arguments `-y colregs-mcp`, no
+**Claude connector directory:** in Claude, open Settings → Connectors,
+search for `COLREGS` and click Connect. No configuration is needed.
+
+**Any other MCP client:** command `npx`, arguments `-y colregs-mcp`, no
 environment.
 
-From a clone instead, to run unreleased changes:
+**From a clone:**
 
 ```bash
 git clone https://github.com/mark-brannan/colregs-mcp && cd colregs-mcp && npm install && npm run build
@@ -37,39 +36,63 @@ then command `node`, argument `/absolute/path/to/colregs-mcp/dist/cli.js`.
 
 ## Tools
 
-| tool                        | input                | returns                                                 |
-| --------------------------- | -------------------- | ------------------------------------------------------- |
-| `evaluate_display`          | `facts`              | every lawful display, cited and with modality per light |
-| `applied_entries`           | `facts`              | the applicability entries that hold, as `{id, cite}`    |
-| `rule_text`                 | `cite`               | verbatim paragraph text from colregs `data/rules.json`  |
-| `light`                     | `id`                 | a light's definition from colregs `data/lights.json`    |
-| `applied_encounter_entries` | `situation`          | scope/classification/precedence entries that hold       |
-| `evaluate_circumstances`    | `situation`          | encounter type, risk of collision, roles                |
-| `applied_conduct_entries`   | `trace`              | conduct entries that attached over a window             |
-| `evaluate_compliance`       | `trace`              | kept/breached/pending verdicts, phase changes           |
-| `evaluate_rule2_departure`  | `situation`, `model` | region membership and advisories against a solved grid  |
+| tool        | input           | returns                                                           |
+| ----------- | --------------- | ----------------------------------------------------------------- |
+| `evaluate`  | `circumstances` | one evaluation: `appraisal`, `signals`, `indicated`, `compliance` |
+| `rule_text` | `cite`          | the verbatim text of a COLREGS paragraph                          |
+| `light`     | `id`            | one light's definition: colour, character, arc, placement         |
 
-`facts` is a colregs fact record: the keys and values of colregs'
-`data/facts.json`, namespaced (`fact:propulsion`, `propulsion:sail`). The
-input schema is generated from that file at startup, so it follows the data.
-A key or value outside the vocabulary is an error, never an empty answer.
+### evaluate
 
-Every tool description carries the coverage limits: COLREGS Part C lights
-only, international text only, lights at night only, pre-release data.
+`circumstances` is the whole picture one vessel is in: `self` (her own
+facts), `others` (each other vessel, with what is known or observed of
+her) and `conditions` (visibility, environment). One call evaluates the
+picture; the response carries four readings of it.
 
-## Two worked examples
+- **`signals`**: every complete, lawful set of lights `self` may show. Each
+  light carries its modality (`shall`, `may`, `shall-if-practicable`) and
+  the paragraph that prescribes it.
+- **`appraisal`**: what the Rules require of `self` on her own, and then
+  against each other vessel: the kind of encounter, whether risk of
+  collision is asserted, and each vessel's role (stand-on, give-way,
+  shall-not-impede).
+- **`indicated`**: for each other vessel, what her observed lights, shapes
+  and sounds indicate she could be.
+- **`compliance`**: over a track of circumstances sampled through time, one
+  verdict per vessel per obligation that attached: kept, breached or
+  pending.
 
-The same two vessels as colregs-engine's README.
+Every id travels with its paragraph cite, and `cited_paragraphs` holds the
+verbatim text of every paragraph the response cites. The input vocabulary
+is generated from the `colregs` data package at startup. A key or value
+outside it is an error, never an empty answer.
 
-### A 12 m sloop, under way: three displays
+### rule_text
+
+Takes a paragraph path such as `25(b)` or `26(c)(i)`, a bare rule number
+such as `25` for every paragraph of that rule, or a range such as
+`24(a)(ii)-(iv)`. Returns the International text as transcribed from the
+USCG amalgamated Navigation Rules, with its source and retrieval date.
+
+### light
+
+Takes a light id as it appears in a response, such as `light:sidelights`
+or `light:all_round`. Returns the Rule 21 definition: colour, character,
+arc in degrees and placement.
+
+## Example
+
+A 12 m sloop under way, alone.
 
 ```json
 {
-  "facts": {
-    "fact:propulsion": "propulsion:sail",
-    "fact:activity": "activity:none",
-    "fact:position": "position:underway",
-    "fact:length_m": 11.6
+  "circumstances": {
+    "self": {
+      "fact:propulsion": "propulsion:sail",
+      "fact:activity": "activity:none",
+      "fact:position": "position:underway",
+      "fact:length_m": 11.6
+    }
   }
 }
 ```
@@ -78,287 +101,96 @@ Trimmed response:
 
 ```json
 {
-  "colregs": { "version": "0.3.4", "source": "resolved" },
-  "applied": [
-    { "id": "rule:25a", "cite": "25(a)", "modality": "modality:shall" },
-    { "id": "rule:25b", "cite": "25(b)", "modality": "modality:may" },
-    { "id": "rule:25c", "cite": "25(c)", "modality": "modality:may" }
-  ],
-  "exempted": [],
-  "overridden": [],
-  "lawful_displays": {
-    "count": 3,
-    "relation": "any_one_of",
-    "options": [
-      {
-        "option": 1,
-        "of": 3,
-        "chosen": [],
-        "lights": [
-          {
-            "light": "light:sidelights",
-            "name": "sidelights",
-            "modality": "modality:shall",
-            "prescribed_by": { "id": "rule:25a", "cite": "25(a)" }
-          },
-          {
-            "light": "light:sternlight",
-            "name": "sternlight",
-            "modality": "modality:shall",
-            "prescribed_by": { "id": "rule:25a", "cite": "25(a)" }
-          }
-        ]
-      },
-      {
-        "option": 2,
-        "of": 3,
-        "chosen": [{ "id": "rule:25b", "cite": "25(b)", "modality": "modality:may" }],
-        "lights": [
-          {
-            "light": "light:sidelights",
-            "name": "sidelights",
-            "combined": true,
-            "position": "at or near the top of the mast",
-            "modality": "modality:may",
-            "prescribed_by": { "id": "rule:25b", "cite": "25(b)" }
-          },
-          {
-            "light": "light:sternlight",
-            "name": "sternlight",
-            "combined": true,
-            "position": "at or near the top of the mast",
-            "modality": "modality:may",
-            "prescribed_by": { "id": "rule:25b", "cite": "25(b)" }
-          }
-        ]
-      },
-      {
-        "option": 3,
-        "of": 3,
-        "chosen": [{ "id": "rule:25c", "cite": "25(c)", "modality": "modality:may" }],
-        "lights": [
-          {
-            "light": "light:sidelights",
-            "name": "sidelights",
-            "modality": "modality:shall",
-            "prescribed_by": { "id": "rule:25a", "cite": "25(a)" }
-          },
-          {
-            "light": "light:sternlight",
-            "name": "sternlight",
-            "modality": "modality:shall",
-            "prescribed_by": { "id": "rule:25a", "cite": "25(a)" }
-          },
-          {
-            "light": "light:all_round",
-            "name": "all-round light",
-            "color": "red",
-            "count": 1,
-            "position": "upper, at or near the top of the mast",
-            "modality": "modality:may",
-            "prescribed_by": { "id": "rule:25c", "cite": "25(c)" }
-          },
-          {
-            "light": "light:all_round",
-            "name": "all-round light",
-            "color": "green",
-            "count": 1,
-            "position": "lower, at or near the top of the mast",
-            "modality": "modality:may",
-            "prescribed_by": { "id": "rule:25c", "cite": "25(c)" }
-          }
-        ]
-      }
-    ]
+  "colregs": { "version": "0.3.4" },
+  "signals": {
+    "applied": [
+      { "id": "rule:25a", "cite": "25(a)", "modality": "modality:shall" },
+      { "id": "rule:25b", "cite": "25(b)", "modality": "modality:may" },
+      { "id": "rule:25c", "cite": "25(c)", "modality": "modality:may" }
+    ],
+    "lawful_displays": {
+      "count": 3,
+      "relation": "any_one_of",
+      "options": [
+        {
+          "option": 1,
+          "of": 3,
+          "lights": [
+            {
+              "light": "light:sidelights",
+              "modality": "modality:shall",
+              "prescribed_by": { "id": "rule:25a", "cite": "25(a)" }
+            },
+            {
+              "light": "light:sternlight",
+              "modality": "modality:shall",
+              "prescribed_by": { "id": "rule:25a", "cite": "25(a)" }
+            }
+          ]
+        },
+        { "option": 2, "of": 3, "...": "..." },
+        { "option": 3, "of": 3, "...": "..." }
+      ]
+    },
+    "modality_key": { "modality:shall": "mandatory", "modality:may": "permitted alternative" },
+    "cited_paragraphs": {
+      "25(a)": "A sailing vessel underway shall exhibit: (i) sidelights; (ii) a sternlight.",
+      "25(b)": "…",
+      "25(c)": "…"
+    }
   },
-  "optional_additions": { "relation": "any_subset_of", "items": [] },
-  "modality_key": { "modality:shall": "mandatory", "modality:may": "permitted alternative" },
-  "cited_paragraphs": {
-    "25(a)": "A sailing vessel underway shall exhibit: (i) sidelights; (ii) a sternlight.",
-    "25(b)": "In a sailing vessel of less than 20 meters in length the lights prescribed in Rule 25(a) may be combined in one lantern carried at or near the top of the mast where it can best be seen.",
-    "25(c)": "A sailing vessel underway may, in addition to the lights prescribed in Rule 25(a), exhibit at or near the top of the mast, where they can best be seen, two all-round lights in a vertical line, the upper being red and the lower green, but these lights shall not be exhibited in conjunction with the combined lantern permitted by Rule 25(b)."
-  }
+  "appraisal": { "self": { "...": "..." }, "others": [] },
+  "indicated": []
 }
 ```
 
-Three is the right number, and the response is built so that "a 12 m sloop
-shows sidelights and a sternlight" cannot be read off it. The fact record
-describes a situation, not a fitted vessel. There is no equipment fact in
-colregs' `data/facts.json` (checked: nothing in that file names a lantern,
-a fitting or a piece of gear), so nothing in the input can settle 25(b)
-against 25(c). The Rules leave that to the skipper, and so does this.
+The sloop has three lawful displays, because the Rules give her the choice
+and nothing in the input settles it.
 
-### A fishing vessel aground: two lawful displays, no exclusion
-
-```json
-{
-  "facts": {
-    "fact:propulsion": "propulsion:power",
-    "fact:activity": "activity:fishing",
-    "fact:position": "position:aground",
-    "fact:length_m": 30
-  }
-}
-```
-
-Trimmed response:
-
-```json
-{
-  "applied": [
-    { "id": "rule:30d", "cite": "30(d)", "modality": "modality:shall" },
-    { "id": "rule:30d_i", "cite": "30(d)(i)", "modality": "modality:shall-if-practicable" }
-  ],
-  "lawful_displays": {
-    "count": 2,
-    "relation": "any_one_of",
-    "options": [
-      {
-        "option": 1,
-        "of": 2,
-        "chosen": [{ "id": "rule:30a", "cite": "30(a)", "modality": "modality:shall" }],
-        "lights": [
-          {
-            "light": "light:all_round",
-            "color": "red",
-            "count": 2,
-            "arrangement": "vertical",
-            "modality": "modality:shall-if-practicable",
-            "prescribed_by": { "id": "rule:30d_i", "cite": "30(d)(i)" }
-          },
-          {
-            "light": "light:all_round",
-            "color": "white",
-            "count": 1,
-            "position": "in the fore part",
-            "modality": "modality:shall",
-            "prescribed_by": { "id": "rule:30a", "cite": "30(a)" },
-            "via": { "id": "rule:30d", "cite": "30(d)" }
-          },
-          {
-            "light": "light:all_round",
-            "color": "white",
-            "count": 1,
-            "position": "at or near the stern, at a lower level than the fore one",
-            "modality": "modality:shall",
-            "prescribed_by": { "id": "rule:30a", "cite": "30(a)" },
-            "via": { "id": "rule:30d", "cite": "30(d)" }
-          }
-        ]
-      },
-      {
-        "option": 2,
-        "of": 2,
-        "chosen": [{ "id": "rule:30b", "cite": "30(b)", "modality": "modality:may" }],
-        "lights": [
-          {
-            "light": "light:all_round",
-            "color": "red",
-            "count": 2,
-            "arrangement": "vertical",
-            "modality": "modality:shall-if-practicable",
-            "prescribed_by": { "id": "rule:30d_i", "cite": "30(d)(i)" }
-          },
-          {
-            "light": "light:all_round",
-            "color": "white",
-            "count": 1,
-            "position": "where it can best be seen",
-            "modality": "modality:may",
-            "prescribed_by": { "id": "rule:30b", "cite": "30(b)" },
-            "via": { "id": "rule:30d", "cite": "30(d)" }
-          }
-        ]
-      }
-    ]
-  },
-  "modality_key": {
-    "modality:shall": "mandatory",
-    "modality:may": "permitted alternative",
-    "modality:shall-if-practicable": "mandatory where practicable, with a stated fallback"
-  },
-  "cited_paragraphs": { "30(a)": "…", "30(b)": "…", "30(d)": "…" }
-}
-```
-
-No Rule 26 entry fires for `position:aground`: per
-[ADR 0007](https://github.com/mark-brannan/colregs/blob/main/docs/adr/0007-rule26-overrides-and-aground.md),
-Rule 26 has no jurisdiction over a vessel aground, so Rule 30(d) alone
-governs and she shows the same anchor lights as any other vessel her
-length, plus 30(d)'s red lights if practicable.
-
-**Side by side.** [docs/demo.md](docs/demo.md) puts the sloop's question to
-the same model with and without this server and shows both answers as
-captured, with the prompt, commands, model id and date, so you can run it
-yourself.
+[docs/demo.md](docs/demo.md) puts the same question to the same model with
+and without this server and shows both answers as captured.
 
 ## Response shape
 
-Three properties, each tested in `test/examples.test.ts`:
+Three properties hold for every response:
 
 1. **Cited, verbatim.** Every entry id travels with its paragraph cite, and
-   `cited_paragraphs` holds the text of every paragraph a response cites,
-   straight from colregs' international USCG-amalgamated text corpus
-   (`data/text/intl/2016/en-US.uscg.json`). This package writes no prose of
-   its own into a response; the only sentences in it are the Rules'.
-2. **Modality per light.** `shall`, `may`, `shall-if-practicable` and the
-   rest are kept on each light, not summarised per display. Option 3 above
-   is two `shall` lights and two `may` lights, and it says so four times.
-   `modality_key` carries colregs' own one-line glossary for the modalities
-   the response uses.
+   `cited_paragraphs` holds the text of every paragraph cited. The only
+   sentences in a response are the Rules' own.
+2. **Modality per light.** `shall`, `may` and `shall-if-practicable` are
+   kept on each light, not summarised per display. `modality_key` is a
+   one-line glossary of the modalities the response uses.
 3. **Plural by construction.** `lawful_displays` opens with `count` and
-   `relation` (`exactly_one` or `any_one_of`) before any lights appear; each
-   option numbers itself `n of count` and names the choice entries that
-   distinguish it; and there is no top-level `lights` field to mistake for
-   the answer. The tool description says why plural is correct, in the terms
-   above.
+   `relation` before any lights appear, and each option numbers itself
+   `n of count`. There is no top-level `lights` field to mistake for the
+   answer.
 
-A vessel that lawfully shows nothing gets one empty display, not an error,
-matching the engine. An error is reserved for input outside the vocabulary.
+A vessel that lawfully shows nothing gets one empty display, not an error.
+An error is reserved for input outside the vocabulary.
 
-Every response carries `colregs.version` and, on `evaluate_display`,
-`colregs.source`, both straight from the engine. The server refuses to start
-if its own copy of colregs and the engine's are different releases.
+Every response carries `colregs.version`. The server refuses to start if its
+own copy of `colregs` and the engine's are different releases.
 
-## Why a separate package
+## Dependencies
 
-colregs-engine is pure, total and has no runtime dependencies, and
-formal-methods work is planned on top of it. A transport and a server SDK
-belong somewhere else. This is that somewhere.
+`colregs-engine` and `colregs` are installed from GitHub `main`, not from
+npm releases; the lockfile pins the commit. Both must resolve the same
+release.
 
-## Dependencies and stability
+## Privacy
 
-- `colregs-engine` and `colregs` are installed from GitHub `main`
-  (`github:mark-brannan/colregs-engine#main`, `github:mark-brannan/colregs#main`),
-  not from npm releases; the lockfile pins the commit. The engine and the
-  data package must resolve the same release; a split install fails at
-  startup with a message saying so.
-- Version 0.0.x. Tool names, argument names and response fields may all
-  change. The three response properties above are the commitment; nothing
-  else is.
-
-## Privacy Policy
-
-The server collects nothing. It runs as a local stdio process on the
-machine that started it, answers from the `colregs` data package installed
-beside it, and makes no network request of its own: there is no telemetry,
-no analytics, no logging of the fact records or cites it is asked about, and
-no account. Nothing a client sends it leaves that process, and nothing is
-written to disk.
-
-The one thing that leaves your machine is the install itself — `npx` or
-`npm install` fetching the package from the public npm registry, which is
-npm's transaction, not this server's.
+The server collects nothing. It runs as a local stdio process, answers from
+the `colregs` data package installed beside it, and makes no network request
+of its own. There is no telemetry, no logging of what it is asked, and no
+account. The only network transaction is the install itself, which is npm's.
 
 ## Releasing
 
 Automatic from the release tag: npm, the MCP registry, and a `.mcpb` bundle
-attached to the GitHub Release. Getting that bundle onto Smithery and into
-the Claude connector directory is two by-hand steps, written down in
+on the GitHub Release. The remaining by-hand steps are in
 [docs/releasing.md](docs/releasing.md).
 
 ## Licence
 
-Apache-2.0. Nothing here is advice to mariners; the fitness-for-navigation
-disclaimer in [colregs](https://github.com/mark-brannan/colregs) carries
-over.
+Apache-2.0. The fitness-for-navigation disclaimer in
+[colregs](https://github.com/mark-brannan/colregs) carries over.
