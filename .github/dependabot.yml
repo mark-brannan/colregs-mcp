@@ -1,0 +1,17 @@
+version: 2
+
+# colregs and colregs-engine float on `#main` and are refreshed by
+# .github/workflows/refresh-upstream.yml, so Dependabot leaves them alone.
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: colregs
+      - dependency-name: colregs-engine
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
