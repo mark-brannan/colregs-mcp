@@ -1,0 +1,76 @@
+name: Refresh upstream
+
+# colregs and colregs-engine float on `#main`, not on npm releases: the spec
+# in package.json names the branch, and the lockfile records the commit it
+# resolved to, as a lockfile must. This workflow moves that commit to the
+# current tip of main and lands it through the normal gate: it opens a
+# lockfile-only pull request and turns on auto-merge, which merges when the
+# required `ci-gate / gate` check is green and not before. The commit is a
+# `fix(deps)` so release-please cuts a patch release of colregs-mcp for it:
+# a new engine changes what the tools say, which is the whole product.
+#
+# Triggers: a `colregs-upstream-pushed` repository_dispatch (for an upstream
+# push-to-main workflow to send; none does yet), a six-hourly schedule, or
+# by hand.
+#
+# The pull request is created with the release-please GitHub App's token, not
+# GITHUB_TOKEN: pull requests made with GITHUB_TOKEN do not start workflows,
+# so CI would never run and auto-merge would wait forever.
+
+on:
+  repository_dispatch:
+    types: [colregs-upstream-pushed]
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: refresh-upstream
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ secrets.RELEASE_PLEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Move the pins to the tip of main
+        run: npm update colregs colregs-engine --package-lock-only
+
+      - name: Open or update the pull request, with auto-merge on
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          BRANCH: chore/refresh-upstream
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- package-lock.json; then
+            echo "pins already at the tip of main"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          git add package-lock.json
+          git commit -m "fix(deps): take colregs and colregs-engine from main"
+          git push --force origin "$BRANCH"
+          if ! gh pr view "$BRANCH" --json state --jq .state | grep -qx OPEN; then
+            gh pr create --head "$BRANCH" \
+              --title "fix(deps): take colregs and colregs-engine from main" \
+              --body "Lockfile-only refresh of the floating \`colregs\` and \`colregs-engine\` pins to the current tip of main. Merges itself when \`ci-gate / gate\` is green."
+          fi
+          gh pr merge "$BRANCH" --auto --squash
