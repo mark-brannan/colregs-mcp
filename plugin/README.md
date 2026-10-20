@@ -14,14 +14,15 @@ text only.
 ## What it runs
 
 Claude starts one local process, `colregs-mcp`, over stdio. The package is
-fetched once from the public npm registry at an exact pinned version
-(`colregs-mcp@0.0.4`) the first time the plugin starts. Source is at
+fetched once from the public npm registry, at the exact version pinned in
+`.mcp.json`, the first time the plugin starts. Source is at
 https://github.com/mark-brannan/colregs-mcp.
 
-It exposes eight read-only tools: `evaluate_display`, `applied_entries`,
+It exposes nine read-only tools: `evaluate_display`, `applied_entries`,
 `applied_encounter_entries`, `applied_conduct_entries`,
-`evaluate_circumstances`, `evaluate_compliance`, `rule_text` (verbatim text of
-a COLREGS paragraph) and `light` (the definition of one light). The set will
+`evaluate_circumstances`, `evaluate_compliance`, `evaluate_rule2_departure`,
+`rule_text` (verbatim text of a COLREGS paragraph) and `light` (the definition
+of one light). The set will
 change as the preview develops.
 
 ## Privacy Policy

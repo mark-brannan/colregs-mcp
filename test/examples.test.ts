@@ -316,6 +316,20 @@ describe('the not-for-navigation warning reaches every surface', () => {
   });
 });
 
+describe('Claude plugin', () => {
+  // release-please bumps plugin.json; the npx pin has no JSON path it can
+  // rewrite, so a release PR that leaves it behind goes red here.
+  it('pins the server at the package version', () => {
+    const pkg = require('../package.json') as { version: string };
+    const plugin = require('../plugin/.claude-plugin/plugin.json') as { version: string };
+    const mcp = require('../plugin/.mcp.json') as {
+      mcpServers: { colregs: { args: string[] } };
+    };
+    expect(plugin.version).toBe(pkg.version);
+    expect(mcp.mcpServers.colregs.args).toContain(`colregs-mcp@${pkg.version}`);
+  });
+});
+
 describe('tool descriptions', () => {
   it('every tool carries the not-for-navigation line and coverage limits', async () => {
     const { tools } = await client.listTools();

@@ -64,6 +64,11 @@
           "type": "json",
           "path": "manifest.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "plugin/.claude-plugin/plugin.json",
+          "jsonpath": "$.version"
         }
       ]
     }
