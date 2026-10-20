@@ -192,5 +192,5 @@ on the GitHub Release. The remaining by-hand steps are in
 
 ## Licence
 
-Apache-2.0. The fitness-for-navigation disclaimer in
+AGPL-3.0-only. The fitness-for-navigation disclaimer in
 [colregs](https://github.com/mark-brannan/colregs) carries over.
