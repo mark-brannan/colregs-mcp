@@ -1,15 +1,13 @@
 # COLREGS
 
-> **Not for navigation.** This is a preview (0.0.x) built on pre-release rule
-> data. Do not use its output to decide what to do on the water. Coverage is
-> partial and the tool surface will change.
+> **Not for navigation.** This is a preview (0.0.x) built on pre-release
+> rule data. Do not use its output to decide what to do on the water.
+> The tool surface will change without notice.
 
 This plugin gives Claude a local MCP server that answers questions under the
 International Regulations for Preventing Collisions at Sea (COLREGS). Every
-answer lists all the lawful options rather than one, and each entry carries its
-paragraph cite and the verbatim rule text, so the model cannot quietly
-simplify it. Coverage today is Part C (lights and shapes), night, international
-text only.
+answer carries its paragraph cites and the verbatim rule text those cites
+resolve to, so a language model cannot quietly simplify it.
 
 ## What it runs
 
