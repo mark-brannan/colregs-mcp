@@ -109,8 +109,25 @@ jobs:
       #
       # server.json's two version fields are kept in step with package.json by
       # release-please's extra-files, so no step here rewrites them.
+      #
+      # The registry fetches the tarball from npm and answers 400 "version not
+      # found" if it is not yet visible there, which it is not for a short
+      # while after `npm publish` returns. So wait, bounded, until
+      # `npm view` answers for this exact version.
       - name: Publish to the MCP registry
         run: |
+          PKG=$(node -p "require('./package.json').version")
+          for i in $(seq 1 30); do
+            if npm view "colregs-mcp@${PKG}" version >/dev/null 2>&1; then
+              break
+            fi
+            if [ "$i" = 30 ]; then
+              echo "colregs-mcp@${PKG} still not visible on npm after 5 minutes" >&2
+              exit 1
+            fi
+            echo "colregs-mcp@${PKG} not visible on npm yet (attempt $i/30); waiting"
+            sleep 10
+          done
           curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" \
             | tar xz mcp-publisher
           ./mcp-publisher login github-oidc
