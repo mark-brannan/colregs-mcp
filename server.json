@@ -6,12 +6,12 @@
     "url": "https://github.com/mark-brannan/colregs-mcp",
     "source": "github"
   },
-  "version": "0.0.4",
+  "version": "0.0.5",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "colregs-mcp",
-      "version": "0.0.4",
+      "version": "0.0.5",
       "transport": {
         "type": "stdio"
       }

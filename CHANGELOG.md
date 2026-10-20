@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.0.5](https://github.com/mark-brannan/colregs-mcp/compare/v0.0.4...v0.0.5) (2026-10-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* relicense to AGPL-3.0-only ([#59](https://github.com/mark-brannan/colregs-mcp/issues/59))
+* plugin bundle for the Claude directory, one evaluate tool ([#57](https://github.com/mark-brannan/colregs-mcp/issues/57))
+
+### Added
+
+* plugin bundle for the Claude directory, one evaluate tool ([#57](https://github.com/mark-brannan/colregs-mcp/issues/57)) ([8a02126](https://github.com/mark-brannan/colregs-mcp/commit/8a02126aab85fae40b32af635beb186e3cf85315))
+
+
+### Changed
+
+* relicense to AGPL-3.0-only ([#59](https://github.com/mark-brannan/colregs-mcp/issues/59)) ([8fca0f2](https://github.com/mark-brannan/colregs-mcp/commit/8fca0f270241482ce6af16ea2a2601454ba744e8))
+
 ## [0.0.4](https://github.com/mark-brannan/colregs-mcp/compare/v0.0.3...v0.0.4) (2026-10-20)
 
 
