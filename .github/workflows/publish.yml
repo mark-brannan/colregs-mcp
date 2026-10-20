@@ -17,6 +17,10 @@ name: Publish
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to publish (dispatch from main); omit when dispatching with --ref <tag>
+        required: false
   # Deliberately no `push: tags` trigger. release-please.yml tags through a
   # GitHub App installation token (not the default GITHUB_TOKEN), so that
   # push DOES fire workflows -- and a `push: tags` listener here would start
@@ -39,10 +43,13 @@ jobs:
     # check below despite not being an actual release tag -- npm trusted
     # publishing doesn't restrict which ref a workflow_dispatch can run on.
     # Refusing anything but a real tag closes that.
-    if: github.ref_type == 'tag'
+    if: github.ref_type == 'tag' || (github.ref == 'refs/heads/main' && inputs.tag != '')
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: refs/tags/${{ env.TAG }}
           fetch-depth: 1
           persist-credentials: false
 
@@ -57,7 +64,6 @@ jobs:
 
       - name: Refuse to publish a tag that disagrees with package.json
         run: |
-          TAG="${GITHUB_REF_NAME}"
           PKG=$(node -p "require('./package.json').version")
           if [ "${TAG#v}" != "$PKG" ]; then
             echo "tag $TAG does not match package.json version $PKG" >&2
@@ -110,28 +116,24 @@ jobs:
       # server.json's two version fields are kept in step with package.json by
       # release-please's extra-files, so no step here rewrites them.
       #
-      # The registry fetches the tarball from npm and answers 400 "version not
-      # found" if it is not yet visible there, which it is not for a short
-      # while after `npm publish` returns. So wait, bounded, until
-      # `npm view` answers for this exact version.
+      # The registry fetches the tarball from npm itself and answers 400 "was
+      # not found" for a short while after `npm publish` returns, so retry that
+      # one call, bounded, on that error only.
       - name: Publish to the MCP registry
         run: |
-          PKG=$(node -p "require('./package.json').version")
-          for i in $(seq 1 30); do
-            if npm view "colregs-mcp@${PKG}" version >/dev/null 2>&1; then
-              break
-            fi
-            if [ "$i" = 30 ]; then
-              echo "colregs-mcp@${PKG} still not visible on npm after 5 minutes" >&2
-              exit 1
-            fi
-            echo "colregs-mcp@${PKG} not visible on npm yet (attempt $i/30); waiting"
-            sleep 10
-          done
           curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" \
             | tar xz mcp-publisher
           ./mcp-publisher login github-oidc
-          ./mcp-publisher publish
+          set -o pipefail
+          for i in $(seq 1 12); do
+            if ./mcp-publisher publish 2>&1 | tee publish.log; then
+              exit 0
+            fi
+            grep -q "was not found" publish.log || exit 1
+            echo "not yet visible to the registry (attempt $i/12); waiting"
+            sleep 15
+          done
+          exit 1
 
       # colregs-mcp#18: a prebuilt bundle for Smithery and the Claude connector
       # directory, both of which have moved off repo scanning for a stdio
@@ -148,6 +150,6 @@ jobs:
           mcpb pack . colregs-mcp.mcpb
 
       - name: Attach the bundle to the GitHub Release
-        run: gh release upload "${GITHUB_REF_NAME}" colregs-mcp.mcpb --clobber
+        run: gh release upload "${TAG}" colregs-mcp.mcpb --clobber
         env:
           GH_TOKEN: ${{ github.token }}
