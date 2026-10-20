@@ -81,7 +81,22 @@ jobs:
           mcpb validate .
 
       # No NODE_AUTH_TOKEN -- authentication is the OIDC identity above.
-      - run: npm publish
+      #
+      # Skipped when this exact version is already on npm. npm refuses to
+      # republish a version, and a tag published by hand (the first
+      # publish, or one made while the trusted publisher was not yet
+      # registered on npmjs.com) must still get its MCP registry entry and
+      # its .mcpb bundle from the steps below, which only this workflow
+      # does. npm is the system of record for "published"; the registry step
+      # then checks the tarball itself.
+      - name: Publish to npm unless this version is already there
+        run: |
+          PKG=$(node -p "require('./package.json').version")
+          if npm view "colregs-mcp@${PKG}" version >/dev/null 2>&1; then
+            echo "colregs-mcp@${PKG} is already on npm; skipping npm publish"
+          else
+            npm publish
+          fi
 
       # The official MCP registry, immediately after npm and from the same
       # tag, so a version can never exist in one and not the other. The

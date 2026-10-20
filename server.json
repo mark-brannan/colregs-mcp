@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mark-brannan/colregs-mcp",
-  "description": "Not for navigation. Preview: cited, plural COLREGS Part C night light displays.",
+  "description": "Not for navigation. Pre-release preview: COLREGS Part C night lights, international text only.",
   "repository": {
     "url": "https://github.com/mark-brannan/colregs-mcp",
     "source": "github"
