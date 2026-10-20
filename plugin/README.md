@@ -31,4 +31,4 @@ about this policy: https://github.com/mark-brannan/colregs-mcp/issues
 
 ## Licence
 
-Apache-2.0.
+AGPL-3.0-only.
