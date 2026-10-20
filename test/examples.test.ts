@@ -317,8 +317,8 @@ describe('the not-for-navigation warning reaches every surface', () => {
 });
 
 describe('Claude plugin', () => {
-  // release-please bumps plugin.json; the npx pin has no JSON path it can
-  // rewrite, so a release PR that leaves it behind goes red here.
+  // release-please bumps plugin.json; .github/workflows/release-sync.yml
+  // sets the npx pin. This catches either one falling behind.
   it('pins the server at the package version', () => {
     const pkg = require('../package.json') as { version: string };
     const plugin = require('../plugin/.claude-plugin/plugin.json') as { version: string };
