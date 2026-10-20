@@ -12,7 +12,7 @@
     "url": "git+https://github.com/mark-brannan/colregs-mcp.git"
   },
   "homepage": "https://github.com/mark-brannan/colregs-mcp#readme",
-  "license": "Apache-2.0",
+  "license": "AGPL-3.0-only",
   "privacy_policies": [
     "https://github.com/mark-brannan/colregs-mcp#privacy-policy"
   ],
