@@ -15,11 +15,24 @@ beforeAll(async () => {
   client = await connect();
 });
 
-describe('evaluate_display: the 12 m sloop shows one of three displays', () => {
+describe('evaluate, signals: the 12 m sloop shows one of three displays', () => {
   it('is structurally plural and every light keeps its modality and cite', async () => {
-    const { isError, body, structured } = await call(client, 'evaluate_display', { facts: SLOOP });
+    const {
+      isError,
+      body: top,
+      structured,
+    } = await call(client, 'evaluate', { circumstances: { self: { fact: SLOOP } } });
     expect(isError).toBe(false);
-    expect(structured).toEqual(body);
+    expect(structured).toEqual(top);
+    expect(Object.keys(top)).toEqual([
+      'warning',
+      'colregs',
+      'circumstances',
+      'appraisal',
+      'signals',
+      'indicated',
+    ]);
+    const body = top.signals;
 
     expect(body.colregs).toEqual({ version: expect.any(String), source: 'resolved' });
     expect(body.facts).toEqual(SLOOP);
@@ -82,9 +95,12 @@ describe('evaluate_display: the 12 m sloop shows one of three displays', () => {
   });
 });
 
-describe('evaluate_display: a fishing vessel aground', () => {
+describe('evaluate, signals: a fishing vessel aground', () => {
   it('falls back to ordinary anchor lights, no Rule 26 entry firing', async () => {
-    const { isError, body } = await call(client, 'evaluate_display', { facts: FISHING_AGROUND });
+    const { isError, body: top } = await call(client, 'evaluate', {
+      circumstances: { self: { fact: FISHING_AGROUND } },
+    });
+    const body = top.signals;
     expect(isError).toBe(false);
 
     // colregs-engine#32 (open, unruled): whether a fishing vessel aground
@@ -115,9 +131,12 @@ describe('evaluate_display: a fishing vessel aground', () => {
   });
 });
 
-describe('evaluate_display: a trawler at anchor (colregs-engine#36)', () => {
+describe('evaluate, signals: a trawler at anchor (colregs-engine#36)', () => {
   it('reports her displaced 30a/30b anchor lights in overridden, not excluded', async () => {
-    const { isError, body } = await call(client, 'evaluate_display', { facts: TRAWLER_ANCHORED });
+    const { isError, body: top } = await call(client, 'evaluate', {
+      circumstances: { self: { fact: TRAWLER_ANCHORED } },
+    });
+    const body = top.signals;
     expect(isError).toBe(false);
 
     // Rule 26's fishing-vessel identification is an obligation that
@@ -160,54 +179,26 @@ describe('evaluate_display: a trawler at anchor (colregs-engine#36)', () => {
   });
 });
 
-describe('applied_entries', () => {
-  it('returns ids with cites and nothing composed', async () => {
-    const { isError, body } = await call(client, 'applied_entries', { facts: SLOOP });
-    expect(isError).toBe(false);
-    expect(body).toEqual({
-      warning: expect.stringContaining('Not for navigation.'),
-      colregs: { version: expect.any(String), source: 'resolved' },
-      facts: SLOOP,
-      applied: [
-        { id: 'rule:25a', cite: '25(a)' },
-        { id: 'rule:25b', cite: '25(b)' },
-        { id: 'rule:25c', cite: '25(c)' },
-      ],
-    });
-  });
-});
-
-// colregs-engine now implements all four of these (they were NotImplementedError
-// stubs before floating to #main); each just asserts the input schema accepts a
-// well-formed call and the engine's own colregs version comes through unshaped.
-describe('the four newly-implemented verbs pass their input schema and the engine answers', () => {
-  const SITUATION = { self: { fact: SLOOP } };
-
-  it.each([
-    ['applied_encounter_entries', { situation: SITUATION }],
-    ['evaluate_circumstances', { situation: SITUATION }],
-    ['applied_conduct_entries', { trace: { samples: [{ t_s: 0, situation: SITUATION }] } }],
-    ['evaluate_compliance', { trace: { samples: [{ t_s: 0, situation: SITUATION }] } }],
-    [
-      'evaluate_rule2_departure',
-      {
-        situation: SITUATION,
-        model: {
-          version: 'grid-1',
-          colregs_version: '0.2.0',
-          dynamics: ['dynamics:cargo'],
-          horizon_s: 60,
-          cadence_s: 1,
-          separation_m: 50,
-          information: 'full',
-          adversary: 'compliant',
-        },
+describe('evaluate, appraisal and indicated', () => {
+  it('reads self on her own and each other vessel she knows of', async () => {
+    const { isError, body } = await call(client, 'evaluate', {
+      circumstances: {
+        self: { fact: SLOOP },
+        others: [{ known: 'in-sight', bearing_deg: 45, range_nm: 2, fact: FISHING_AGROUND }],
       },
-    ],
-  ])('%s: accepted input, unshaped body', async (tool, args) => {
-    const { isError, body } = await call(client, tool, args);
+    });
     expect(isError).toBe(false);
-    expect(body.warning).toContain('Not for navigation.');
+    expect(body.appraisal.self.colregs.version).toEqual(expect.any(String));
+    expect(body.appraisal.others).toHaveLength(1);
+    expect(body.appraisal.others[0].restedOn).toBe('asserted');
+    expect(body.indicated).toHaveLength(1);
+  });
+  it('an other vessel needs to be known somehow: no neutral way', async () => {
+    const res = await client.callTool({
+      name: 'evaluate',
+      arguments: { circumstances: { self: { fact: SLOOP }, others: [{ fact: SLOOP }] } },
+    });
+    expect(res.isError).toBe(true);
   });
 });
 
@@ -263,27 +254,31 @@ describe('light', () => {
 describe('inputs', () => {
   it('rejects a fact outside colregs vocabulary rather than answering', async () => {
     const res = await client.callTool({
-      name: 'evaluate_display',
-      arguments: { facts: { propulsion: 'sail' } },
+      name: 'evaluate',
+      arguments: { circumstances: { self: { fact: { propulsion: 'sail' } } } },
     });
     expect(res.isError).toBe(true);
   });
   it('rejects a value the engine does not know', async () => {
     const res = await client.callTool({
-      name: 'evaluate_display',
-      arguments: { facts: { ...SLOOP, 'fact:activity': 'activity:racing' } },
+      name: 'evaluate',
+      arguments: {
+        circumstances: { self: { fact: { ...SLOOP, 'fact:activity': 'activity:racing' } } },
+      },
     });
     expect(res.isError).toBe(true);
   });
   it('an empty record is a vessel that shows nothing: one empty display, not an error', async () => {
-    const { isError, body } = await call(client, 'evaluate_display', { facts: {} });
+    const { isError, body } = await call(client, 'evaluate', {
+      circumstances: { self: { fact: {} } },
+    });
     expect(isError).toBe(false);
-    expect(body.lawful_displays).toEqual({
+    expect(body.signals.lawful_displays).toEqual({
       count: 1,
       relation: 'exactly_one',
       options: [{ option: 1, of: 1, chosen: [], entries: [], lights: [] }],
     });
-    expect(body.cited_paragraphs).toEqual({});
+    expect(body.signals.cited_paragraphs).toEqual({});
   });
 });
 
@@ -295,7 +290,7 @@ describe('the not-for-navigation warning reaches every surface', () => {
     expect(instructions).toContain('pre-release colregs data');
   });
   it('every response body carries it, success and error alike', async () => {
-    const ok = await call(client, 'applied_entries', { facts: SLOOP });
+    const ok = await call(client, 'evaluate', { circumstances: { self: { fact: SLOOP } } });
     expect(ok.isError).toBe(false);
     expect(ok.body.warning).toContain('Not for navigation.');
     expect(Object.keys(ok.body)[0]).toBe('warning');
@@ -333,28 +328,18 @@ describe('Claude plugin', () => {
 describe('tool descriptions', () => {
   it('every tool carries the not-for-navigation line and coverage limits', async () => {
     const { tools } = await client.listTools();
-    expect(tools.map((t) => t.name).sort()).toEqual([
-      'applied_conduct_entries',
-      'applied_encounter_entries',
-      'applied_entries',
-      'evaluate_circumstances',
-      'evaluate_compliance',
-      'evaluate_display',
-      'evaluate_rule2_departure',
-      'light',
-      'rule_text',
-    ]);
+    expect(tools.map((t) => t.name).sort()).toEqual(['evaluate', 'light', 'rule_text']);
     for (const t of tools) {
       expect(t.description).toContain('Not for navigation.');
       expect(t.description).toContain('Part C lights only');
       expect(t.description).toContain('pre-release colregs data');
     }
-    const ev = tools.find((t) => t.name === 'evaluate_display')!;
+    const ev = tools.find((t) => t.name === 'evaluate')!;
     expect(ev.description).toContain('has no equipment fact');
     expect(ev.description).toContain('every option is equally lawful');
-    const props = (
-      ev.inputSchema as { properties: Record<string, { properties: Record<string, unknown> }> }
-    ).properties.facts.properties;
+    type Obj = { properties: Record<string, Obj> };
+    const schema = ev.inputSchema as unknown as Obj;
+    const props = schema.properties.circumstances.properties.self.properties.fact.properties;
     expect(Object.keys(props)).toContain('fact:length_m');
     expect(Object.keys(props)).not.toContain('fact:rule18_class');
   });

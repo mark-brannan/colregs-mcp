@@ -18,12 +18,10 @@ fetched once from the public npm registry, at the exact version pinned in
 `.mcp.json`, the first time the plugin starts. Source is at
 https://github.com/mark-brannan/colregs-mcp.
 
-It exposes nine read-only tools: `evaluate_display`, `applied_entries`,
-`applied_encounter_entries`, `applied_conduct_entries`,
-`evaluate_circumstances`, `evaluate_compliance`, `evaluate_rule2_departure`,
-`rule_text` (verbatim text of a COLREGS paragraph) and `light` (the definition
-of one light). The set will
-change as the preview develops.
+It exposes three read-only tools: `evaluate` (one evaluation of the
+circumstances a vessel is in: her lawful lights, what Part B requires of her,
+and what the other vessels' signals indicate), `rule_text` (the verbatim text
+of a COLREGS paragraph) and `light` (the definition of one light).
 
 ## Privacy Policy
 
