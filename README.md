@@ -177,7 +177,7 @@ own copy of `colregs` and the engine's are different releases.
 npm releases; the lockfile pins the commit. Both must resolve the same
 release.
 
-## Privacy
+## Privacy Policy
 
 The server collects nothing. It runs as a local stdio process, answers from
 the `colregs` data package installed beside it, and makes no network request
