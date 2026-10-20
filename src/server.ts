@@ -3,23 +3,18 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import {
-  evaluateCompliance,
-  evaluateDisplay,
-  evaluateCircumstances,
-  evaluateDeparture,
-} from 'colregs-engine';
-import type { FactRecord, DepartureModel, Situation, Trace } from 'colregs-engine';
+import { evaluate } from 'colregs-engine';
+import type { Circumstances, FactRecord } from 'colregs-engine';
 import { z } from 'zod';
 
 import { COLREGS_VERSION, facts as factsData, lights, paragraphKeys, rules } from './data.js';
-import { shapeApplied, shapeEvaluation } from './shape.js';
+import { shapeEvaluation } from './shape.js';
 
 const require_ = (await import('node:module')).createRequire(import.meta.url);
 export const VERSION: string = (require_('../package.json') as { version: string }).version;
 
 // Appended to every tool description. The wording is deliberately the same
-// on all four so a client that shows one tool shows the limits.
+// on every tool so a client that shows one tool shows the limits.
 export const NOT_FOR_NAVIGATION =
   'Not for navigation. ' +
   'Coverage: COLREGS Part C lights only, international (high seas) text only, ' +
@@ -34,7 +29,7 @@ export const NOT_FOR_NAVIGATION =
 export const INSTRUCTIONS =
   NOT_FOR_NAVIGATION +
   '\n\n' +
-  'When lawful_displays.count is greater than 1, every option is equally lawful and ' +
+  'When signals.lawful_displays.count is greater than 1, every option is equally lawful and ' +
   'the answer is all of them. Quote rule text from cited_paragraphs or rule_text, ' +
   'never from memory.';
 
@@ -52,11 +47,11 @@ const PLURAL_ANSWER =
   'own modality, so "shall" and "may" lights in one display are never merged.';
 
 const CHECK_VERSIONS = (): void => {
-  // rule_text and light read this package's colregs; evaluate_display reads
-  // the engine's. They dedupe to one copy under a compatible range, but a
+  // rule_text and light read this package's colregs; evaluate reads the
+  // engine's. They dedupe to one copy under a compatible range, but a
   // split install would cite paragraphs from one release against entries
   // from another and nothing in a response could show it.
-  const engineSees = evaluateDisplay({}).colregs.version;
+  const engineSees = evaluate({ self: { fact: {} } }).signals?.colregs.version;
   if (engineSees !== COLREGS_VERSION) {
     throw new Error(
       `colregs version split: colregs-engine resolved colregs@${engineSees}, ` +
@@ -106,92 +101,81 @@ function factRecordSchema() {
   return z.object(shape).strict();
 }
 
-// Below wraps colregs-engine's other four named verbs (ADR 0011 §4, ADR
-// 0012). colregs-engine now implements all of them; this package still
-// passes each result through unshaped -- no cites resolved, no modality
-// paired with its light -- so a caller gets exactly what the engine
-// returns. Giving these the same treatment evaluate_display gets in
-// shape.ts is tracked separately, not part of following colregs-engine
-// onto main.
-const UNSHAPED =
-  'The result is passed through from colregs-engine as-is, without the id/cite ' +
-  'resolution or modality pairing evaluate_display and rule_text provide.';
-
-// kin/geo/hist/env key sets are compile-time only in colregs-engine, unlike
-// facts.json — so these are open records, not generated like FactsSchema.
+// Input for `evaluate`: a Circumstances record as colregs-engine's unified
+// evaluate reads it (curia colregs-domain-model). kin/geo/act/hist/env key
+// sets are compile-time only in colregs-engine, unlike facts.json, so those
+// are open records, not generated like factRecordSchema.
 const namespacedRecord = (prefix: string, note: string) =>
   z
     .record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()]))
     .optional()
-    .describe(`Keys namespaced \`${prefix}:*\` per colregs-engine's Situation type. ${note}`);
+    .describe(`Keys namespaced \`${prefix}:*\` per colregs-engine. ${note}`);
 
 function vesselSchema() {
   return z
     .object({
-      fact: z
-        .lazy(() => factRecordSchema())
-        .describe('A fact record for this vessel; same vocabulary as evaluate_display.'),
+      fact: z.lazy(() => factRecordSchema()).describe('What this vessel is and is doing.'),
       kin: namespacedRecord(
         'kin',
         'Absolute kinematic state (position, heading, speed, dynamics).',
       ),
       geo: namespacedRecord(
         'geo',
-        "Geometry measured from this vessel's own frame (relative bearing, windward).",
+        'Geometry measured from her own frame (relative bearing, windward).',
       ),
-      hist: namespacedRecord('hist', 'What has already been true of this encounter and latches.'),
+      act: namespacedRecord('act', 'What she is doing or intending now, stated, never derived.'),
+      hist: namespacedRecord('hist', 'What has already been true and latches.'),
     })
     .strict();
 }
 
-function situationSchema() {
+function otherSchema() {
   return z
     .object({
-      self: vesselSchema().describe('The vessel whose obligations are being evaluated.'),
-      other: vesselSchema()
+      known: z
+        .enum(['in-sight', 'radar-alone', 'heard'])
+        .describe(
+          'How self knows of her: Rule 11 in sight, Rule 19(d) by radar alone, Rule 19(e) heard.',
+        ),
+      bearing_deg: z.number().optional().describe("Her bearing relative to self's heading."),
+      range_nm: z.number().optional().describe('Her range from self, nautical miles.'),
+      fact: z
+        .lazy(() => factRecordSchema())
         .optional()
-        .describe('The other vessel, when this is a two-vessel encounter.'),
-      pair: z
+        .describe('What she is, as asserted by the caller.'),
+      observed: z
         .object({
-          geo: namespacedRecord(
-            'geo',
-            'Geometry symmetric between the two vessels (range, CPA, TCPA, in_sight).',
-          ),
-          env: namespacedRecord(
-            'env',
-            'Where the encounter is happening, not a property of either vessel.',
-          ),
+          lights: z.array(z.string()).optional(),
+          shapes: z.array(z.string()).optional(),
+          sounds: z.array(z.string()).optional(),
         })
         .strict()
-        .optional(),
+        .optional()
+        .describe(
+          'What self sees or hears of her: light, shape and sound ids, never what she exhibits.',
+        ),
+      kin: namespacedRecord('kin', 'Her absolute kinematic state.'),
+      geo: namespacedRecord('geo', 'Pairwise geometry about her (CPA, TCPA, risk_of_collision).'),
+      act: namespacedRecord('act', 'What she is doing or intending now.'),
+      hist: namespacedRecord('hist', 'What has already been true of her and latches.'),
     })
     .strict();
 }
 
-const SolverParametersSchema = z.object({
-  dynamics: z
-    .array(z.string())
-    .describe('Vessel dynamics classes the grid covers, e.g. "dynamics:cargo".'),
-  horizon_s: z.number(),
-  cadence_s: z.number(),
-  separation_m: z.number(),
-  information: z.enum(['full', 'partial']),
-  adversary: z.enum(['compliant', 'physics']),
-});
-
-const Rule2DepartureModelSchema = SolverParametersSchema.extend({
-  version: z.string().describe('Names the solved grid immutably.'),
-  colregs_version: z.string().describe('The colregs release the grid was solved against.'),
-}).strict();
-
-const TraceSchema = z
-  .object({
-    samples: z
-      .array(z.object({ t_s: z.number(), situation: situationSchema() }).strict())
-      .min(1)
-      .describe('Strictly increasing t_s, the same two vessels throughout.'),
-  })
-  .strict();
+function circumstancesSchema() {
+  return z
+    .object({
+      self: vesselSchema()
+        .optional()
+        .describe('The vessel whose obligations and signals are read.'),
+      others: z
+        .array(otherSchema())
+        .optional()
+        .describe('The other vessels, each as self knows her.'),
+      conditions: namespacedRecord('env', 'The water: narrow channel, traffic lane.'),
+    })
+    .strict();
+}
 
 // First field of every response, success or error. Descriptions are read once
 // at connect time; the response is what a model has in front of it when it answers.
@@ -232,49 +216,45 @@ export function createServer(): McpServer {
     { name: 'colregs-mcp', version: VERSION },
     { instructions: INSTRUCTIONS },
   );
-  const FactsSchema = factRecordSchema();
 
   server.registerTool(
-    'evaluate_display',
+    'evaluate',
     {
-      title: 'Evaluate lawful light displays',
+      title: 'Evaluate the circumstances',
       description:
-        'Every complete, lawful set of navigation lights one vessel may show, from a ' +
-        'fact record (propulsion, activity, position, length, and the other facts ' +
-        'in colregs data/facts.json) under the COLREGS. Returns the applied entries; ' +
-        'exempted (relieved by a rel:exempts entry) and overridden (displaced by a ' +
-        "superior obligation's rel:overrides) entries, each with the entry that did it; " +
-        'and lawful_displays: ' +
+        'One evaluation of the circumstances one vessel is in, under the COLREGS, with ' +
+        'three readings. signals: every complete, lawful set of navigation lights self ' +
+        'may show, from her fact record (propulsion, activity, position, length, and the ' +
+        'other facts in colregs data/facts.json): the applied entries; exempted (relieved ' +
+        "by a rel:exempts entry) and overridden (displaced by a superior obligation's " +
+        'rel:overrides) entries, each with the entry that did it; and lawful_displays: ' +
         '{count, relation, options}. relation is "none", "exactly_one" or "any_one_of". ' +
         PLURAL_ANSWER +
         ' optional_additions are lawful extras (relation any_subset_of) that do not ' +
         'multiply the display set. Every id carries its paragraph cite, and ' +
         'cited_paragraphs holds the verbatim text of every cited paragraph. ' +
+        'appraisal: what Part B requires of self on her own, then against each other ' +
+        "vessel (kind of encounter, risk of collision, each vessel's role). indicated: " +
+        'per other vessel, what her observed lights, shapes and sounds say she could be. ' +
+        'appraisal and indicated are passed through from colregs-engine as returned, ' +
+        'without the cite resolution signals has. Compliance over time is not read yet. ' +
         NOT_FOR_NAVIGATION,
-      inputSchema: { facts: FactsSchema },
+      inputSchema: { circumstances: circumstancesSchema() },
       annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
-    ({ facts }) =>
-      withEngine(() => shapeEvaluation(facts as FactRecord, evaluateDisplay(facts as FactRecord))),
-  );
-
-  server.registerTool(
-    'applied_entries',
-    {
-      title: 'Applied applicability entries',
-      description:
-        'The colregs applicability entries whose conditions hold for a fact record, as ' +
-        '{id, cite} pairs in data order, without composing displays. Use evaluate_display ' +
-        'for the lights; this is the cheaper question "which paragraphs speak to this ' +
-        'vessel". Same input as evaluate_display. ' +
-        NOT_FOR_NAVIGATION,
-      inputSchema: { facts: FactsSchema },
-      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-    },
-    ({ facts }) =>
-      withEngine(() =>
-        shapeApplied(facts as FactRecord, evaluateDisplay(facts as FactRecord).applied),
-      ),
+    ({ circumstances }) =>
+      withEngine(() => {
+        const c = circumstances as Circumstances;
+        const ev = evaluate(c);
+        const signals = ev.signals;
+        return {
+          colregs: { version: COLREGS_VERSION, source: 'resolved' },
+          circumstances: c,
+          appraisal: ev.appraisal,
+          signals: signals && shapeEvaluation(c.self?.fact as FactRecord, signals),
+          indicated: ev.indicated,
+        };
+      }),
   );
 
   server.registerTool(
@@ -330,7 +310,7 @@ export function createServer(): McpServer {
       description:
         'The definition of one light from colregs data/lights.json, verbatim: name, ' +
         'the Rule 21 paragraph that defines it, colour, character, arc in degrees and ' +
-        'placement. Ids are the light ids that evaluate_display returns, such as ' +
+        'placement. Ids are the light ids that evaluate returns in signals, such as ' +
         '"light:sidelights" or "light:all_round"; the "light:" prefix is optional. ' +
         'Arcs use the bearing convention returned alongside. ' +
         NOT_FOR_NAVIGATION,
@@ -348,89 +328,6 @@ export function createServer(): McpServer {
         bearing_convention: lights.bearing_convention,
       });
     },
-  );
-
-  server.registerTool(
-    'applied_encounter_entries',
-    {
-      title: 'Applied encounter applicability entries',
-      description:
-        'The colregs `scope`, `classification` and `precedence` entries whose predicate ' +
-        'holds for a two-vessel situation, without resolving roles or risk of collision. ' +
-        UNSHAPED +
-        ' ' +
-        NOT_FOR_NAVIGATION,
-      inputSchema: { situation: situationSchema() },
-      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-    },
-    ({ situation }) => withEngine(() => evaluateCircumstances(situation as Situation).applied),
-  );
-
-  server.registerTool(
-    'evaluate_circumstances',
-    {
-      title: 'Evaluate the circumstances',
-      description:
-        'What kind of encounter two vessels are in (head-on, crossing, overtaking), whether ' +
-        'risk of collision is asserted and by which entries, and each vessel’s roles ' +
-        '(stand-on, give-way, shall-not-impede, ...) with rel:overrides resolved. ' +
-        UNSHAPED +
-        ' ' +
-        NOT_FOR_NAVIGATION,
-      inputSchema: { situation: situationSchema() },
-      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-    },
-    ({ situation }) => withEngine(() => evaluateCircumstances(situation as Situation)),
-  );
-
-  server.registerTool(
-    'applied_conduct_entries',
-    {
-      title: 'Applied conduct applicability entries',
-      description:
-        'The ids of the conduct entries that attached anywhere over a trace window, without ' +
-        'judging whether they were kept. ' +
-        UNSHAPED +
-        ' ' +
-        NOT_FOR_NAVIGATION,
-      inputSchema: { trace: TraceSchema },
-      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-    },
-    ({ trace }) => withEngine(() => evaluateCompliance(trace as Trace).applied),
-  );
-
-  server.registerTool(
-    'evaluate_compliance',
-    {
-      title: 'Evaluate compliance over a trace',
-      description:
-        'One verdict (kept, breached, pending) per applied conduct entry per vessel it ' +
-        'attached to, plus Rule 13(d)/17 phase changes, over a trace of situation samples. ' +
-        UNSHAPED +
-        ' ' +
-        NOT_FOR_NAVIGATION,
-      inputSchema: { trace: TraceSchema },
-      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-    },
-    ({ trace }) => withEngine(() => evaluateCompliance(trace as Trace)),
-  );
-
-  server.registerTool(
-    'evaluate_rule2_departure',
-    {
-      title: 'Evaluate Rule 2 departure against a solved region grid',
-      description:
-        'Region membership for a situation under a named, pre-solved Rule 2(b) departure ' +
-        'grid (model), with whatever escapes the grid holds, ranked best margin first. ' +
-        'The model is required and positional — there is no default grid. ' +
-        UNSHAPED +
-        ' ' +
-        NOT_FOR_NAVIGATION,
-      inputSchema: { situation: situationSchema(), model: Rule2DepartureModelSchema },
-      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-    },
-    ({ situation, model }) =>
-      withEngine(() => evaluateDeparture(situation as Situation, model as DepartureModel)),
   );
 
   return server;

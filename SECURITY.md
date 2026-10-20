@@ -37,8 +37,7 @@ This server speaks MCP over stdio to a client you launch yourself
 connections. The trust boundary is the tool call itself, since the caller is
 usually a language model rather than a human typing carefully.
 
-- **Tool input handling** (`evaluate_display`, `applied_entries`, `rule_text`,
-  `light`). An input outside the generated schema's vocabulary must error,
+- **Tool input handling** (`evaluate`, `rule_text`, `light`). An input outside the generated schema's vocabulary must error,
   never return an empty or misleading answer, and must not crash the process
   or hang it.
 - **The response shape.** A tool result that drops a citation, a modality, or

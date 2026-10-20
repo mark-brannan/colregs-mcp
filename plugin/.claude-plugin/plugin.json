@@ -1,0 +1,10 @@
+{
+  "name": "colregs-mcp",
+  "displayName": "COLREGS",
+  "description": "Not for navigation. Answers questions under the COLREGS with every lawful answer, each carrying its paragraph cites and the verbatim rule text. Pre-release preview.",
+  "version": "0.0.4",
+  "author": { "name": "mark-brannan" },
+  "homepage": "https://github.com/mark-brannan/colregs-mcp#readme",
+  "repository": "https://github.com/mark-brannan/colregs-mcp",
+  "license": "AGPL-3.0-only"
+}

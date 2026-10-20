@@ -60,7 +60,7 @@ jobs:
           {
             echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}'
             echo '{"jsonrpc":"2.0","method":"notifications/initialized"}'
-            echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"evaluate_display","arguments":{"facts":{"fact:propulsion":"propulsion:sail","fact:position":"position:underway","fact:making_way":true,"fact:length_m":12}}}}'
+            echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"evaluate","arguments":{"circumstances":{"self":{"fact":{"fact:propulsion":"propulsion:sail","fact:position":"position:underway","fact:making_way":true,"fact:length_m":12}}}}}}'
             echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"rule_text","arguments":{"cite":"25(b)"}}}'
           } | node unpacked/dist/cli.js > out.jsonl
 

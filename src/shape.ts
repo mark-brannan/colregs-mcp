@@ -15,7 +15,7 @@
 
 import type { DisplayEvaluation, DisplayLight, FactRecord } from 'colregs-engine';
 
-import { COLREGS_VERSION, MODALITY_KEY, citeOf, citedParagraphs, lights } from './data.js';
+import { MODALITY_KEY, citeOf, citedParagraphs, lights } from './data.js';
 
 export interface Cited {
   id: string;
@@ -140,22 +140,5 @@ export function shapeEvaluation(facts: FactRecord, ev: DisplayEvaluation): Evalu
     optional_additions: { relation: 'any_subset_of', items: additions },
     modality_key,
     cited_paragraphs: citedParagraphs(cites),
-  };
-}
-
-export interface AppliedEntriesResponse {
-  colregs: { version: string; source: 'resolved' };
-  facts: FactRecord;
-  applied: Cited[];
-}
-
-export function shapeApplied(facts: FactRecord, ids: string[]): AppliedEntriesResponse {
-  // The server never passes opts.data to the engine, so the data is the
-  // engine's own resolved release by construction; the version is checked
-  // against this package's copy at startup (server.ts).
-  return {
-    colregs: { version: COLREGS_VERSION, source: 'resolved' },
-    facts,
-    applied: ids.map(cited),
   };
 }

@@ -1,0 +1,64 @@
+name: Release sync
+
+# release-please bumps every version it can reach by JSON path, but the
+# plugin's npx pin in plugin/.mcp.json is half of a string
+# ("colregs-mcp@0.0.4"), which no JSON path can rewrite. This finishes the
+# release pull request: it sets the pin to package.json's version and
+# commits through the API, so the commit is signed and, made with the app
+# token, triggers CI again. A push with nothing to change does nothing.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pin:
+    if: >-
+      startsWith(github.head_ref, 'release-please--') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ secrets.RELEASE_PLEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Set the pin to the package version
+        run: |
+          node -e '
+            const fs = require("fs");
+            const v = require("./package.json").version;
+            const p = "plugin/.mcp.json";
+            fs.writeFileSync(p, fs.readFileSync(p, "utf8").replace(/colregs-mcp@[^"]+/, "colregs-mcp@" + v));
+          '
+
+      - name: Commit it to the release pull request
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if git diff --quiet; then echo "pin already current"; exit 0; fi
+          jq -n \
+            --arg repo "$GITHUB_REPOSITORY" \
+            --arg branch "$BRANCH" \
+            --arg head "$(git rev-parse HEAD)" \
+            --arg version "$(node -p 'require("./package.json").version')" \
+            --arg contents "$(base64 -w0 plugin/.mcp.json)" \
+            '{
+              query: "mutation($input: CreateCommitOnBranchInput!) { createCommitOnBranch(input: $input) { commit { oid } } }",
+              variables: { input: {
+                branch: { repositoryNameWithOwner: $repo, branchName: $branch },
+                expectedHeadOid: $head,
+                message: { headline: "chore: pin the plugin to colregs-mcp@\($version)" },
+                fileChanges: { additions: [{ path: "plugin/.mcp.json", contents: $contents }] }
+              } }
+            }' | gh api graphql --input -

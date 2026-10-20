@@ -52,26 +52,22 @@ describe('the built CLI over real stdio', () => {
   it('loads, handshakes and reports its tools', async () => {
     expect(client.getServerVersion()?.name).toBe('colregs-mcp');
     const { tools } = await client.listTools();
-    expect(tools.map((t) => t.name).sort()).toEqual([
-      'applied_conduct_entries',
-      'applied_encounter_entries',
-      'applied_entries',
-      'evaluate_circumstances',
-      'evaluate_compliance',
-      'evaluate_display',
-      'evaluate_rule2_departure',
-      'light',
-      'rule_text',
-    ]);
+    expect(tools.map((t) => t.name).sort()).toEqual(['evaluate', 'light', 'rule_text']);
   });
 
   it('answers from the packaged colregs data, not just from src', async () => {
     // Three lawful displays for the sloop: the property the package exists
     // for, reached through the artifact a consumer installs.
-    const { isError, body } = await callCli('evaluate_display', { facts: SLOOP });
+    const { isError, body } = await callCli('evaluate', {
+      circumstances: { self: { fact: SLOOP } },
+    });
     expect(isError).toBe(false);
-    expect((body.lawful_displays as { count: number }).count).toBe(3);
-    expect(Object.keys(body.cited_paragraphs as object).length).toBeGreaterThan(0);
+    const signals = body.signals as {
+      lawful_displays: { count: number };
+      cited_paragraphs: object;
+    };
+    expect(signals.lawful_displays.count).toBe(3);
+    expect(Object.keys(signals.cited_paragraphs).length).toBeGreaterThan(0);
   });
 
   it('reports an input outside the vocabulary as an error, not an empty answer', async () => {

@@ -6,9 +6,8 @@
 // package is for and will not.
 
 export { createServer, NOT_FOR_NAVIGATION, VERSION } from './server.js';
-export { shapeApplied, shapeEvaluation } from './shape.js';
+export { shapeEvaluation } from './shape.js';
 export type {
-  AppliedEntriesResponse,
   Cited,
   CitedBy,
   CitedModal,

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "colregs": {
+      "command": "npx",
+      "args": ["-y", "colregs-mcp@0.0.4"]
+    }
+  }
+}
