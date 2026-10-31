@@ -2,7 +2,7 @@
   "name": "colregs-mcp",
   "displayName": "COLREGS",
   "description": "Not for navigation. Answers questions under the COLREGS with every lawful answer, each carrying its paragraph cites and the verbatim rule text. Pre-release preview.",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "author": {
     "name": "mark-brannan"
   },
