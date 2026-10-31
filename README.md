@@ -2,7 +2,7 @@
 
 > [!WARNING]
 > **Not for navigation.** This is a preview (0.0.x) built on pre-release
-> rule data.  Do not use its output to decide what to do on the water.
+> rule data. Do not use its output to decide what to do on the water.
 > The tool surface will change without notice.
 
 An [MCP](https://modelcontextprotocol.io) server that answers questions

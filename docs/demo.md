@@ -23,14 +23,14 @@ What navigation lights does my 11.6 m sailboat show at night, under sail and und
 
 ## How it was captured
 
-| | |
-|---|---|
-| Date | 2026-10-10, runs started between 10:26:57 and 10:30:26 UTC |
-| Client | Claude Code 2.1.258, `claude -p` (one question, no conversation) |
-| Model | `claude-sonnet-5-5`, read back from the `modelUsage` field of every run |
-| Server | this repository at commit `56aaca5`, built with `npm ci && npm run build` |
-| Data | `colregs` 0.3.4 (the `colregs.version` the tool reports) and `colregs-engine` 0.1.7 (from the install) |
-| Runs | six in total, all listed [below](#all-six-runs); none was discarded |
+|        |                                                                                                        |
+| ------ | ------------------------------------------------------------------------------------------------------ |
+| Date   | 2026-10-10, runs started between 10:26:57 and 10:30:26 UTC                                             |
+| Client | Claude Code 2.1.258, `claude -p` (one question, no conversation)                                       |
+| Model  | `claude-sonnet-5-5`, read back from the `modelUsage` field of every run                                |
+| Server | this repository at commit `56aaca5`, built with `npm ci && npm run build`                              |
+| Data   | `colregs` 0.3.4 (the `colregs.version` the tool reports) and `colregs-engine` 0.1.7 (from the install) |
+| Runs   | six in total, all listed [below](#all-six-runs); none was discarded                                    |
 
 Without the server:
 
@@ -45,7 +45,11 @@ With it, the same command plus `--mcp-config mcp.json --allowedTools mcp__colreg
 before the `--` and `> server.jsonl` at the end, where `mcp.json` is
 
 ```json
-{ "mcpServers": { "colregs": { "command": "node", "args": ["/absolute/path/to/colregs-mcp/dist/cli.js"] } } }
+{
+  "mcpServers": {
+    "colregs": { "command": "node", "args": ["/absolute/path/to/colregs-mcp/dist/cli.js"] }
+  }
+}
 ```
 
 (The capture used the absolute path of its clone; it is replaced here.)
@@ -101,6 +105,7 @@ reader nothing to check it against.
   > 25(e): A vessel proceeding under sail when also being propelled by machinery shall exhibit forward where it can best be seen a conical shape, apex downwards.
 
   Without the Rules open, a reader cannot tell this slip from a correct cite.
+
 - **Nothing in it can be checked.** No paragraph text, and no marking of which
   lights are mandatory and which are permitted.
 
@@ -110,7 +115,18 @@ Run 2, started 10:28:43 UTC. The model made one tool call, read back with
 `jq -c 'select(.type=="assistant") | .message.content[] | select(.type=="tool_use") | {name, input}' server.jsonl`:
 
 ```json
-{"name":"mcp__colregs__evaluate_display","input":{"facts":{"fact:propulsion":"propulsion:sail","fact:activity":"activity:none","fact:position":"position:underway","fact:making_way":true,"fact:length_m":11.6}}}
+{
+  "name": "mcp__colregs__evaluate_display",
+  "input": {
+    "facts": {
+      "fact:propulsion": "propulsion:sail",
+      "fact:activity": "activity:none",
+      "fact:position": "position:underway",
+      "fact:making_way": true,
+      "fact:length_m": 11.6
+    }
+  }
+}
 ```
 
 (It added `fact:making_way` on its own. The README's sloop leaves it out and
@@ -147,7 +163,7 @@ cited_paragraphs: 25(a), 25(b), 25(c)
 
 The model's answer, verbatim:
 
-````text
+```text
 Three displays are lawful for an 11.6 m sailboat under sail and underway. Which one you show depends on how your boat is fitted. This is not for navigation.
 
 | # | Display | Rule |
@@ -159,7 +175,7 @@ Three displays are lawful for an 11.6 m sailboat under sail and underway. Which 
 Sidelights and a sternlight are mandatory (25(a)). Under 20 m you may combine them into one masthead lantern (25(b)). The red-over-green lights (25(c)) are an optional addition. They may not be shown together with the combined lantern from #1.
 
 The tool's data is a pre-release version (0.3.4) that is still being checked. Rule text quoted is from the tool's output.
-````
+```
 
 It opens with the count, names the choice each display turns on, and keeps
 25(c) apart from 25(b), all of which come straight from the response. The
@@ -168,14 +184,14 @@ given, which carries the cites and the verbatim paragraph text.
 
 ## All six runs
 
-| Run | Server | UTC | What the answer did |
-|---|---|---|---|
-| 1 | no | 10:26:57 | Leads with "Rule 25 requires three lights"; 25(b) and 25(c) as bullets; torch cited as 25(e), which is 25(d)(i). Shown above |
-| 3 | no | 10:29:56 | "One of two arrangements", then 25(c) as an optional extra; cites right. The closest bare run to the server's, and still no count of three and no rule text |
-| 4 | no | 10:29:56 | Opens "at minimum" three lights; describes 25(b) as the two sidelights in one lantern at the bow, and cites the tricolour as 25(e); flags its own ranges as from memory |
-| 2 | yes | 10:28:43 | One `evaluate_display` call; "three lawful displays"; 25(a), 25(b), 25(c); 25(c) not with 25(b). Shown above |
-| 5 | yes | 10:30:26 | One call; "three lawful displays"; the same three-row table; quotes 25(a) and 25(c) from the response |
-| 6 | yes | 10:30:26 | One call (also sent `fact:motorsailing: false`); "three lawful displays"; the same three-row table |
+| Run | Server | UTC      | What the answer did                                                                                                                                                     |
+| --- | ------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | no     | 10:26:57 | Leads with "Rule 25 requires three lights"; 25(b) and 25(c) as bullets; torch cited as 25(e), which is 25(d)(i). Shown above                                            |
+| 3   | no     | 10:29:56 | "One of two arrangements", then 25(c) as an optional extra; cites right. The closest bare run to the server's, and still no count of three and no rule text             |
+| 4   | no     | 10:29:56 | Opens "at minimum" three lights; describes 25(b) as the two sidelights in one lantern at the bow, and cites the tricolour as 25(e); flags its own ranges as from memory |
+| 2   | yes    | 10:28:43 | One `evaluate_display` call; "three lawful displays"; 25(a), 25(b), 25(c); 25(c) not with 25(b). Shown above                                                            |
+| 5   | yes    | 10:30:26 | One call; "three lawful displays"; the same three-row table; quotes 25(a) and 25(c) from the response                                                                   |
+| 6   | yes    | 10:30:26 | One call (also sent `fact:motorsailing: false`); "three lawful displays"; the same three-row table                                                                      |
 
 Three runs each is a sample, not a rate. It does not show that a bare model is
 always wrong, and run 3 shows it is not. It shows what to expect: the bare
