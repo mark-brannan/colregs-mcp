@@ -1,29 +1,20 @@
 # Releasing
 
-Cutting a release is automatic. Getting the bundle in front of Smithery and
-the Claude connector directory is not: both need an account, so those are the
-two steps a person does by hand.
+Cutting a release is automatic. Smithery and the Claude directory are not:
+both need an account, so those are the two steps a person does by hand.
 
 ## The automatic part
 
 Merging release-please's release PR tags the commit, and
 [`publish.yml`](../.github/workflows/publish.yml) does the rest from that tag:
-npm, the official MCP registry, then `mcpb pack`, with the `.mcpb` attached to
-the GitHub Release as `colregs-mcp.mcpb`.
+npm, then the official MCP registry.
 
 The manifest is schema-validated _before_ `npm publish`, because everything
 after that line is irreversible. Nothing below needs doing until that workflow
 is green.
 
-**Verify:** the Release page for the new tag lists `colregs-mcp.mcpb` as an
-asset, and
-
-```bash
-gh release download vX.Y.Z --pattern colregs-mcp.mcpb --dir /tmp/rel
-```
-
-downloads it. That downloaded file is what both steps below upload — don't
-build a local one, or the thing reviewed is not the thing released.
+**Verify:** the workflow run is green, and `npm view colregs-mcp version` shows
+the new version.
 
 ## Smithery
 
@@ -39,39 +30,36 @@ Namespaces are globally unique and first-come, and the free tier allows three.
 The CLI is the unscoped `smithery` package, not `@smithery/cli`; both still
 publish a `smithery` binary and only the unscoped one has `mcp publish`.
 
-Then, per release:
+Then, per release, build the bundle from the release tag (the workflow no
+longer attaches one):
 
 ```bash
-smithery mcp publish /tmp/rel/colregs-mcp.mcpb -n <namespace>/colregs-mcp
+npm ci && npm run build && npm prune --omit=dev
+npx @anthropic-ai/mcpb pack . colregs-mcp.mcpb
+smithery mcp publish colregs-mcp.mcpb -n <namespace>/colregs-mcp
 ```
 
 **Verify:** `smithery.ai/server/<namespace>/colregs-mcp` resolves and shows the
 version just published, not the previous one.
 
-## Claude connector directory
+## Claude directory (plugin bundle)
 
-A web form at
-[claude.com/docs/connectors/building/submission](https://claude.com/docs/connectors/building/submission),
-separate from the remote-connector portal; no organisation account is needed
-for the `.mcpb` path. Upload the downloaded `colregs-mcp.mcpb`.
+The directory no longer accepts local servers as `.mcpb` uploads
+([#58](https://github.com/mark-brannan/colregs-mcp/issues/58)); a local server
+is a plugin bundle the portal reads from this repo's default branch. The
+bundle is [`plugin/`](../plugin/). Submit once at
+[claude.ai/directory/manage](https://claude.ai/directory/manage) (paid Claude
+plan, GitHub connected to the claude.ai organization): repository
+`mark-brannan/colregs-mcp`, plugin path `plugin`, branch empty. After that the
+GitHub push webhook picks up each merge to `main`.
 
-Two things reviewers reject outright, both already satisfied — check they
-still are rather than assuming:
+Per release, raise `version` in `plugin/.claude-plugin/plugin.json` and the
+pin in `plugin/.mcp.json` together: an exact version, never `@latest`. Run
+`claude plugin validate ./plugin` first.
 
-- **`privacy_policies` must resolve.** `manifest.json` points at the README's
-  [Privacy Policy](../README.md#privacy-policy) anchor. A missing or
-  incomplete policy is an immediate rejection, and an anchor is exactly the
-  kind of link a README restructure breaks silently.
-- **Every tool carries `readOnlyHint`.** All four do; a new tool added without
-  one would fail the annotation gate at the next submission, not at the commit
-  that added it.
+Reviewers need the privacy policy to resolve: `plugin/README.md` carries a
+**Privacy Policy** section, and a README restructure breaks that silently.
+Expect a policy hold, "Runs a pinned npx package"; it is read, not rejected.
 
-Neither platform documents a minimum version or maturity bar — that was
-checked against both submission and review-criteria pages, not assumed, and
-recorded in [#18](https://github.com/mark-brannan/colregs-mcp/issues/18).
-The 0.0.x version and the not-for-navigation warning are carried into the
-bundle description verbatim, so a reviewer sees them without having to look.
-
-**Verify:** submission acknowledged, and the listing appears as a community
-connector. Nothing in the repo changes for this step, so the confirmation
-email is the only record — there is no local state to check.
+**Verify:** under Submissions, Versions, the new version passes the scan and
+is published; the listing appears as a community plugin.
