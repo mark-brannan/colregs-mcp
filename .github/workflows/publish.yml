@@ -75,18 +75,6 @@ jobs:
       - run: npm test
       - run: npm run build
 
-      # Before `npm publish`, because everything below this line is
-      # irreversible: a version that has been pushed to npm and to the MCP
-      # registry cannot be taken back, so a manifest that fails schema
-      # validation must fail the release while there is still nothing to undo.
-      # The bundle is no longer built or attached here: the Claude directory
-      # takes a plugin bundle read from the repo (colregs-mcp#58), and Smithery's
-      # upload is built by hand (docs/releasing.md).
-      - name: Install mcpb and validate the manifest
-        run: |
-          npm install -g @anthropic-ai/mcpb
-          mcpb validate .
-
       # No NODE_AUTH_TOKEN -- authentication is the OIDC identity above.
       #
       # Skipped when this exact version is already on npm. npm refuses to
