@@ -21,6 +21,18 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  # Formatting gate: .prettierrc over the tree. On failure the annotation names
+  # the fix, since the check's own output is the diff, not the command.
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run format:check || { echo "::error::run npm run format"; exit 1; }
+
   # The single required status check, shared across repositories: the
   # `gate` job of mark-brannan/.github's reusable ci-gate workflow, which fails
   # unless every result in `needs` is green. The reported context is
@@ -93,7 +105,7 @@ jobs:
     uses: mark-brannan/.github/.github/workflows/pr-title.yml@main
 
   ci-gate:
-    needs: [test, bundle, nonempty, pr-title]
+    needs: [test, format, bundle, nonempty, pr-title]
     if: always()
     # It reads nothing and writes nothing; the results go in as an input.
     permissions: {}
