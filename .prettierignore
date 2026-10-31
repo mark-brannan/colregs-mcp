@@ -6,3 +6,4 @@ CHANGELOG.md
 .release-please-manifest.json
 # CI workflows are not reformatted by this tool
 .github
+.claude/
