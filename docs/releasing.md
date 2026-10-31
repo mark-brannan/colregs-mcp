@@ -13,8 +13,10 @@ The manifest is schema-validated _before_ `npm publish`, because everything
 after that line is irreversible. Nothing below needs doing until that workflow
 is green.
 
-**Verify:** the workflow run is green, and `npm view colregs-mcp version` shows
-the new version.
+**Verify:** the workflow run is green, `npm view colregs-mcp version` shows the
+new version, and
+`curl -s 'https://registry.modelcontextprotocol.io/v0/servers?search=io.github.mark-brannan/colregs-mcp'`
+lists it at that version.
 
 ## Smithery
 
@@ -31,9 +33,11 @@ The CLI is the unscoped `smithery` package, not `@smithery/cli`; both still
 publish a `smithery` binary and only the unscoped one has `mcp publish`.
 
 Then, per release, build the bundle from the release tag (the workflow no
-longer attaches one):
+longer attaches one). `npm prune` leaves the tree pruned, so run this from a
+clean checkout you can discard:
 
 ```bash
+git checkout vX.Y.Z
 npm ci && npm run build && npm prune --omit=dev
 npx @anthropic-ai/mcpb pack . colregs-mcp.mcpb
 smithery mcp publish colregs-mcp.mcpb -n <namespace>/colregs-mcp
@@ -53,9 +57,10 @@ plan, GitHub connected to the claude.ai organization): repository
 `mark-brannan/colregs-mcp`, plugin path `plugin`, branch empty. After that the
 GitHub push webhook picks up each merge to `main`.
 
-Per release, raise `version` in `plugin/.claude-plugin/plugin.json` and the
-pin in `plugin/.mcp.json` together: an exact version, never `@latest`. Run
-`claude plugin validate ./plugin` first.
+Per release, the `version` in `plugin/.claude-plugin/plugin.json` and the pin
+in `plugin/.mcp.json` are bumped by the release PR itself (release-please
+config and `release-sync.yml`); check that it shows both, an exact version and
+never `@latest`. Run `claude plugin validate ./plugin` before merging it.
 
 Reviewers need the privacy policy to resolve: `plugin/README.md` carries a
 **Privacy Policy** section, and a README restructure breaks that silently.

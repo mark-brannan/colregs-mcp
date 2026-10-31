@@ -92,8 +92,8 @@ jobs:
       # Skipped when this exact version is already on npm. npm refuses to
       # republish a version, and a tag published by hand (the first
       # publish, or one made while the trusted publisher was not yet
-      # registered on npmjs.com) must still get its MCP registry entry and
-      # its .mcpb bundle from the steps below, which only this workflow
+      # registered on npmjs.com) must still get its MCP registry entry
+      # from the steps below, which only this workflow
       # does. npm is the system of record for "published"; the registry step
       # then checks the tarball itself.
       - name: Publish to npm unless this version is already there
