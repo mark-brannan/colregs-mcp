@@ -30,8 +30,8 @@ Namespaces are globally unique and first-come, and the free tier allows three.
 The CLI is the unscoped `smithery` package, not `@smithery/cli`; both still
 publish a `smithery` binary and only the unscoped one has `mcp publish`.
 
-Then, per release, build the bundle from the release tag. `npm prune` leaves the tree pruned, so run this from a clean
-checkout you can discard:
+Then, per release, build the bundle from the release tag. `npm prune` leaves
+the tree pruned, so run this from a clean checkout you can discard:
 
 ```bash
 git checkout vX.Y.Z
@@ -45,9 +45,10 @@ version just published, not the previous one.
 
 ## Claude directory (plugin bundle)
 
-The directory takes a local server as a plugin bundle the portal reads from this
-repo's default branch ([#58](https://github.com/mark-brannan/colregs-mcp/issues/58)). The
-bundle is [`plugin/`](../plugin/). Submit once at
+The directory takes a local server as a plugin bundle the portal reads from
+this repo's default branch
+([#58](https://github.com/mark-brannan/colregs-mcp/issues/58)). The bundle is
+[`plugin/`](../plugin/). Submit once at
 [claude.ai/directory/manage](https://claude.ai/directory/manage) (paid Claude
 plan, GitHub connected to the claude.ai organization): repository
 `mark-brannan/colregs-mcp`, plugin path `plugin`, branch empty. After that the
