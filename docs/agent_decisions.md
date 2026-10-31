@@ -12,3 +12,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261031t003458z
 - Smithery .mcpb is built by hand from the tag; the Release no longer attaches one Undo: git revert the PR ([#58](https://github.com/mark-brannan/colregs-mcp/issues/58)) (no PR, branch claude/m1-directory-prep)
+
+### 20261031t003509z
+- Drop the .mcpb build and release upload from publish.yml (#58: the .mcpb route is closed) Undo: git revert the PR ([#58](https://github.com/mark-brannan/colregs-mcp/issues/58)) (no PR, branch claude/m1-directory-prep)
