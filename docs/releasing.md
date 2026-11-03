@@ -9,7 +9,8 @@ Merging release-please's release PR tags the commit, and
 [`publish.yml`](../.github/workflows/publish.yml) does the rest from that tag:
 npm, then the official MCP registry.
 
-Nothing below needs doing until that workflow is green.
+The Smithery upload and the directory's scan wait until that workflow is
+green; the release-PR check under Claude directory comes before the merge.
 
 **Verify:** the workflow run is green, `npm view colregs-mcp version` shows the
 new version, and
