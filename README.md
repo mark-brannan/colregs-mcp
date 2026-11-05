@@ -186,8 +186,8 @@ account. The only network transaction is the install itself, which is npm's.
 
 ## Releasing
 
-Automatic from the release tag: npm, the MCP registry, and a `.mcpb` bundle
-on the GitHub Release. The remaining by-hand steps are in
+Automatic from the release tag: npm and the MCP registry. The by-hand steps
+(Smithery, the Claude directory plugin bundle) are in
 [docs/releasing.md](docs/releasing.md).
 
 ## Licence

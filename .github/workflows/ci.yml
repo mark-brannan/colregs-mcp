@@ -41,7 +41,7 @@ jobs:
   # this job's id is part of the contract. `always()` is what lets the gate
   # evaluate when a dependency failed or was skipped, so it reports an explicit
   # pass or fail of its own rather than inheriting the skip.
-  # The .mcpb bundle a connector-directory or Smithery user installs is not the
+  # The .mcpb bundle a Smithery user installs is not the
   # npm package: it is packed from a production install, and `.mcpbignore`
   # deletes files out of it by hand. Nothing else in this repo would notice a
   # pattern there that took a file the server reads at runtime -- typecheck,
@@ -63,7 +63,7 @@ jobs:
         run: |
           npm install -g @anthropic-ai/mcpb
           mcpb validate .
-          npm prune --omit=dev # what the release packs; see .github/workflows/publish.yml
+          npm prune --omit=dev # what a by-hand Smithery upload packs; see docs/releasing.md
           mcpb pack . colregs-mcp.mcpb
 
       - name: The unpacked bundle answers over stdio
