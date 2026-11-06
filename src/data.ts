@@ -61,14 +61,19 @@ interface ApplicabilityData {
 
 // colregs (ADR 0020) split rules.json into a language-neutral skeleton
 // (path/rule/jurisdiction, no text) plus per-edition text corpora under
-// data/text/. This tool has always quoted the USCG amalgamated
-// international text (server.ts's rule_text description says so), so that
-// corpus -- intl@2016.en-US.uscg, per data/corpora.json -- is the one read
+// data/text/. The skeleton is a forest keyed by jurisdiction; this tool
+// has always quoted the USCG amalgamated international text (server.ts's
+// rule_text description says so), so that corpus -- intl@2016.en-US.uscg,
+// per data/corpora.json -- and its `intl` skeleton root are the ones read
 // here; a jurisdiction/edition/language switch is a product decision, not
 // part of following colregs onto main.
 interface RulesSkeleton {
   note: string;
   paragraphs: Record<string, { path: string; rule: string; jurisdiction: string }>;
+}
+interface RulesSkeletonForest {
+  note: string;
+  skeletons: Record<string, RulesSkeleton>;
 }
 interface RulesTextCorpus {
   source: { publisher: string; title: string; url: string; retrieved: string };
@@ -77,7 +82,7 @@ interface RulesTextCorpus {
   paragraphs: Record<string, { rule_title: string; text: string }>;
 }
 
-const rulesSkeleton = require('colregs/data/rules.json') as RulesSkeleton;
+const rulesSkeleton = (require('colregs/data/rules.json') as RulesSkeletonForest).skeletons.intl;
 const rulesText = require('colregs/data/text/intl/2016/en-US.uscg.json') as RulesTextCorpus;
 
 export const rules: RulesData = {
