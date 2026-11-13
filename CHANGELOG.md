@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.8](https://github.com/mark-brannan/colregs-mcp/compare/v0.0.7...v0.0.8) (2026-11-13)
+
+
+### Fixed
+
+* **deps:** take colregs and colregs-engine from main ([#75](https://github.com/mark-brannan/colregs-mcp/issues/75)) ([5387ac0](https://github.com/mark-brannan/colregs-mcp/commit/5387ac045cbc399c0b4b4e2146a595e7f37ce523))
+
 ## [0.0.7](https://github.com/mark-brannan/colregs-mcp/compare/v0.0.6...v0.0.7) (2026-11-03)
 
 
