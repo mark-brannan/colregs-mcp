@@ -20,6 +20,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: conflict-sweep
+  cancel-in-progress: false
+
 jobs:
   sweep:
     if: github.event_name != 'pull_request' || (github.event.label.name == 'Has Conflict' && !github.event.pull_request.head.repo.fork)
